@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Radar Leads | Encontre clientes no mapa</title>
+  <meta name="description" content="Extraia leads de empresas por nicho e cidade, com telefone, WhatsApp, site, e-mail e endereço. Exporte para Excel, organize em um CRM e aborde pelo WhatsApp. Gratuito.">
+  <meta property="og:title" content="Radar Leads | Encontre clientes no mapa">
+  <meta property="og:description" content="Leads de empresas por nicho e cidade, com WhatsApp, exportação para Excel e CRM. Gratuito e sem cadastro.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#0d9f6e">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script>
+    try { const t = localStorage.getItem('radarleads:tema'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.07 4.93A10 10 0 1 0 22 12"/><path d="M16.24 7.76A6 6 0 1 0 18 12"/><circle cx="12" cy="12" r="2"/><path d="m13.4 10.6 6-6"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-busca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm5.8 14.13c-.24.68-1.42 1.3-1.96 1.35-.5.05-.98.23-3.3-.69-2.8-1.1-4.56-3.97-4.7-4.15-.14-.18-1.12-1.49-1.12-2.85s.71-2.02.97-2.3c.25-.27.55-.34.73-.34l.53.01c.17 0 .4-.06.62.48.24.56.8 1.94.86 2.08.07.14.12.3.02.48-.09.18-.14.3-.27.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.56.16.27.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.2 1.36.28.14.44.11.6-.07.16-.18.69-.8.88-1.08.18-.27.37-.23.62-.14.25.09 1.6.76 1.88.9.27.13.45.2.52.31.06.12.06.66-.17 1.3Z"/></symbol>
+    <symbol id="i-baixar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-pessoas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m1 6 7-3 8 3 7-3v15l-7 3-8-3-7 3Z"/><path d="M8 3v15M16 6v15"/></symbol>
+    <symbol id="i-globo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></symbol>
+    <symbol id="i-enviar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-cadeado" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+    <symbol id="i-camadas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></symbol>
+    <symbol id="i-engrenagem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></symbol>
+    <symbol id="i-alvo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  </svg>
+
+  <header class="navegacao">
+    <div class="envelope">
+      <a href="index.html" class="logo"><span class="logo-icone"><svg><use href="#i-radar"/></svg></span>Radar Leads</a>
+      <nav aria-label="Navegação principal">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#recursos">Recursos</a>
+        <a href="#automacao">Automação</a>
+        <a href="#precos">Preços</a>
+        <a href="#duvidas">Dúvidas</a>
+      </nav>
+      <a class="btn btn-primario" href="app.html"><svg><use href="#i-busca"/></svg><span>Abrir o painel</span></a>
+    </div>
+  </header>
+
+  <main>
+    <section class="heroi">
+      <div class="envelope">
+        <div>
+          <span class="selo selo-marca">100% gratuito, sem cadastro e sem cartão</span>
+          <h1>Encontre clientes no mapa e <em>feche vendas pelo WhatsApp</em></h1>
+          <p class="lead">Escolha um nicho e uma cidade. O Radar Leads lista as empresas da região com telefone, WhatsApp, site, e-mail, redes sociais e endereço, prontas para exportar ao Excel ou abordar em um clique.</p>
+          <form class="busca-rapida" action="app.html" method="get">
+            <label class="sr-only" for="h-nicho">Nicho</label>
+            <input class="entrada" id="h-nicho" name="nicho" placeholder="Nicho, ex.: dentista" required>
+            <label class="sr-only" for="h-local">Cidade</label>
+            <input class="entrada" id="h-local" name="local" placeholder="Cidade, ex.: Campinas, SP" required>
+            <button class="btn btn-primario" type="submit"><svg><use href="#i-busca"/></svg>Buscar leads</button>
+          </form>
+          <div class="garantias">
+            <span><svg><use href="#i-check"/></svg>Buscas ilimitadas</span>
+            <span><svg><use href="#i-check"/></svg>Exporta para Excel e CSV</span>
+            <span><svg><use href="#i-check"/></svg>CRM e disparo no WhatsApp</span>
+          </div>
+        </div>
+
+        <div class="demo" aria-hidden="true">
+          <div class="demo-janela">
+            <div class="demo-barra"><i></i><i></i><i></i></div>
+            <div class="demo-corpo">
+              <div class="demo-kpis">
+                <div><span>Leads</span><b>312</b></div>
+                <div><span>Com WhatsApp</span><b>184</b></div>
+                <div><span>Sem site</span><b>141</b></div>
+              </div>
+              <div class="demo-linha"><div><strong>Clínica Sorriso Pleno</strong><small>Dentista, Cambuí</small></div><span class="selo selo-alerta">Sem site</span><span class="demo-zap"><svg><use href="#i-zap"/></svg></span></div>
+              <div class="demo-linha"><div><strong>Odonto Vida Taquaral</strong><small>Dentista, Taquaral</small></div><span class="selo selo-marca">92 pts</span><span class="demo-zap"><svg><use href="#i-zap"/></svg></span></div>
+              <div class="demo-linha"><div><strong>Instituto Dental Barão</strong><small>Clínica, Barão Geraldo</small></div><span class="selo selo-acento">Com site</span><span class="demo-zap"><svg><use href="#i-zap"/></svg></span></div>
+              <div class="demo-linha"><div><strong>Dra. Helena Prado</strong><small>Consultório, Centro</small></div><span class="selo selo-alerta">Sem site</span><span class="demo-zap"><svg><use href="#i-zap"/></svg></span></div>
+            </div>
+          </div>
+          <div class="flutuante f1"><svg><use href="#i-baixar"/></svg>leads-dentistas-campinas.xlsx</div>
+          <div class="flutuante f2"><svg><use href="#i-zap"/></svg>Mensagem pronta para enviar</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="faixa">
+      <div class="envelope">
+        <div><b>80+</b><span>nichos prontos para buscar</span></div>
+        <div><b>5.570</b><span>municípios brasileiros pesquisáveis</span></div>
+        <div><b>26</b><span>campos por lead exportado</span></div>
+        <div><b>R$ 0</b><span>de mensalidade, para sempre</span></div>
+      </div>
+    </section>
+
+    <section class="secao" id="como-funciona">
+      <div class="envelope">
+        <div class="titulo-secao">
+          <span class="sobretitulo">Como funciona</span>
+          <h2>Da busca ao primeiro contato em menos de um minuto</h2>
+          <p>Prospecção ativa sem planilhas manuais, sem copiar e colar do mapa e sem pagar por lista.</p>
+        </div>
+        <div class="passos">
+          <div class="cartao passo"><h3>Escolha nicho e região</h3><p>Digite o segmento (dentistas, academias, oficinas) e a cidade, o bairro ou um raio em quilômetros. Dá para buscar em várias cidades de uma vez.</p></div>
+          <div class="cartao passo"><h3>Filtre os melhores leads</h3><p>Veja quem tem WhatsApp, e-mail ou site, quem ainda não tem presença online e a pontuação de cada cadastro. Tudo também no mapa.</p></div>
+          <div class="cartao passo"><h3>Exporte ou aborde</h3><p>Baixe em Excel, salve no CRM e envie mensagens personalizadas pelo WhatsApp com modelos e variáveis como nome e cidade.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao alt" id="recursos">
+      <div class="envelope">
+        <div class="titulo-secao">
+          <span class="sobretitulo">Recursos</span>
+          <h2>Tudo o que uma ferramenta profissional de prospecção oferece</h2>
+          <p>Um único painel para encontrar, qualificar, organizar e converter.</p>
+        </div>
+        <div class="recursos">
+          <div class="cartao recurso verde"><div class="icone"><svg><use href="#i-busca"/></svg></div><h3>Extração por nicho e cidade</h3><p>Mais de 80 nichos mapeados e busca livre por qualquer palavra. Cidade inteira, bairro ou raio de 1 a 25 km.</p></div>
+          <div class="cartao recurso verde"><div class="icone"><svg><use href="#i-zap"/></svg></div><h3>WhatsApp identificado</h3><p>Celulares são reconhecidos automaticamente e viram um botão que abre a conversa com a mensagem pronta.</p></div>
+          <div class="cartao recurso verde"><div class="icone"><svg><use href="#i-alvo"/></svg></div><h3>Filtro de oportunidade</h3><p>Encontre empresas sem site, sem e-mail ou sem redes sociais, o público ideal para quem vende sites e marketing.</p></div>
+          <div class="cartao recurso"><div class="icone"><svg><use href="#i-baixar"/></svg></div><h3>Excel e CSV</h3><p>Planilhas com 26 colunas, filtros automáticos e link direto do WhatsApp e do Google Maps para cada empresa.</p></div>
+          <div class="cartao recurso"><div class="icone"><svg><use href="#i-pessoas"/></svg></div><h3>CRM com funil</h3><p>Etapas de novo a fechado, arrastar e soltar, anotações e histórico de movimentações de cada lead.</p></div>
+          <div class="cartao recurso"><div class="icone"><svg><use href="#i-enviar"/></svg></div><h3>Disparo assistido</h3><p>Fila de envio com modelos personalizados e intervalo de segurança entre mensagens para proteger seu número.</p></div>
+          <div class="cartao recurso"><div class="icone"><svg><use href="#i-mapa"/></svg></div><h3>Mapa interativo</h3><p>Visualize a concentração de empresas por bairro e planeje rotas de visita comercial.</p></div>
+          <div class="cartao recurso"><div class="icone"><svg><use href="#i-camadas"/></svg></div><h3>Google Places opcional</h3><p>Conecte sua própria chave para trazer avaliações e notas dos estabelecimentos, usando a cota gratuita do Google.</p></div>
+          <div class="cartao recurso"><div class="icone"><svg><use href="#i-cadeado"/></svg></div><h3>Privacidade total</h3><p>Seus leads ficam no seu navegador. Faça backup em arquivo e restaure em qualquer computador.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao">
+      <div class="envelope">
+        <div class="titulo-secao">
+          <span class="sobretitulo">Para quem é</span>
+          <h2>Feito para quem vive de gerar novos clientes</h2>
+        </div>
+        <div class="publicos">
+          <div class="cartao publico"><h3>Criadores de sites</h3><p>Liste empresas sem site na sua cidade e ofereça um projeto com argumento concreto.</p></div>
+          <div class="cartao publico"><h3>Agências de marketing</h3><p>Monte listas segmentadas para campanhas de tráfego, redes sociais e Google Meu Negócio.</p></div>
+          <div class="cartao publico"><h3>Vendas B2B</h3><p>Representantes, distribuidores e SDRs com uma base qualificada por região todos os dias.</p></div>
+          <div class="cartao publico"><h3>Consultores e prestadores</h3><p>Contadores, advogados e consultores que prospectam empresas locais com abordagem personalizada.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao alt" id="automacao">
+      <div class="envelope automacao">
+        <div>
+          <span class="selo selo-acento">Automação gratuita</span>
+          <h2 style="font-size:clamp(26px,3vw,36px);margin-top:14px">Sua base de leads atualizada sozinha, toda semana</h2>
+          <p style="color:var(--texto-2)">O projeto inclui um robô que roda no GitHub Actions, gratuito para repositórios públicos e com cota mensal generosa para privados. Ele executa as buscas que você definir, enriquece os dados visitando o site de cada empresa e entrega as planilhas prontas.</p>
+          <ul>
+            <li><svg><use href="#i-relogio"/></svg>Agendamento semanal ou execução manual com um clique</li>
+            <li><svg><use href="#i-globo"/></svg>Enriquecimento automático de e-mail e Instagram a partir dos sites</li>
+            <li><svg><use href="#i-baixar"/></svg>CSV e JSON salvos no repositório e prontos para importar no CRM</li>
+            <li><svg><use href="#i-engrenagem"/></svg>Integração opcional com o Google Places usando um segredo do repositório</li>
+          </ul>
+        </div>
+        <div class="codigo"><span class="c"># automacao/buscas.json</span>
+[
+  { <span class="k">"nicho"</span>: <span class="s">"dentista"</span>, <span class="k">"local"</span>: <span class="s">"Campinas, SP"</span> },
+  { <span class="k">"nicho"</span>: <span class="s">"academia"</span>, <span class="k">"local"</span>: <span class="s">"Sorocaba, SP"</span>, <span class="k">"raioKm"</span>: <span class="s">10</span> },
+  { <span class="k">"nicho"</span>: <span class="s">"pet shop"</span>, <span class="k">"local"</span>: <span class="s">"Jundiaí, SP"</span> }
+]
+
+<span class="c"># ou pelo terminal</span>
+<span class="k">node</span> scripts/extrair-leads.mjs \
+  --nicho <span class="s">"pizzaria"</span> --local <span class="s">"Curitiba, PR"</span> --enriquecer</div>
+      </div>
+    </section>
+
+    <section class="secao" id="precos">
+      <div class="envelope">
+        <div class="titulo-secao">
+          <span class="sobretitulo">Preços</span>
+          <h2>Simples: é gratuito</h2>
+          <p>Sem limite de buscas, de exportações ou de leads no CRM. Você só paga se optar pelo Google e passar da cota gratuita dele.</p>
+        </div>
+        <div class="precos">
+          <div class="cartao preco destaque">
+            <h3>Plano Livre</h3>
+            <div class="valor">R$ 0 <small>por mês</small></div>
+            <ul>
+              <li><svg><use href="#i-check"/></svg>Buscas e exportações ilimitadas</li>
+              <li><svg><use href="#i-check"/></svg>Dados abertos do OpenStreetMap</li>
+              <li><svg><use href="#i-check"/></svg>CRM, mapa, histórico e backup</li>
+              <li><svg><use href="#i-check"/></svg>Disparo assistido no WhatsApp</li>
+              <li><svg><use href="#i-check"/></svg>Automação semanal no GitHub Actions</li>
+            </ul>
+            <a class="btn btn-primario btn-g" href="app.html">Começar agora</a>
+          </div>
+          <div class="cartao preco">
+            <h3>Com Google Places</h3>
+            <div class="valor">Cota grátis <small>do Google</small></div>
+            <ul>
+              <li><svg><use href="#i-check"/></svg>Tudo do Plano Livre</li>
+              <li><svg><use href="#i-check"/></svg>Avaliações e número de reviews</li>
+              <li><svg><use href="#i-check"/></svg>Cobertura ampliada de telefones</li>
+              <li><svg><use href="#i-check"/></svg>Chave própria, guardada só no seu navegador</li>
+              <li><svg><use href="#i-check"/></svg>Cobrança do Google apenas acima da cota mensal</li>
+            </ul>
+            <a class="btn btn-g" href="app.html#config">Configurar chave</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="secao alt" id="duvidas">
+      <div class="envelope">
+        <div class="titulo-secao">
+          <span class="sobretitulo">Dúvidas frequentes</span>
+          <h2>Perguntas que todo mundo faz</h2>
+        </div>
+        <div class="perguntas">
+          <details open><summary>É gratuito de verdade?</summary><p>Sim. A fonte padrão é o OpenStreetMap, uma base de mapas aberta e colaborativa, consultada sem chave e sem custo. O site é estático e pode ser hospedado de graça no GitHub Pages.</p></details>
+          <details><summary>De onde vêm os dados?</summary><p>Do OpenStreetMap, por meio das APIs públicas Nominatim e Overpass, sob a licença ODbL. Opcionalmente, do Google Places com a sua chave. Em ambos os casos são dados públicos de estabelecimentos comerciais.</p></details>
+          <details><summary>Por que alguns leads vêm sem telefone?</summary><p>Porque a informação não foi cadastrada no mapa. Use os filtros "Com telefone" e "Com WhatsApp" para trabalhar apenas os completos, ou ative o Google Places e o enriquecimento automático para ampliar a cobertura.</p></details>
+          <details><summary>Usar esses contatos está de acordo com a LGPD?</summary><p>Os dados são de empresas e foram publicados para contato comercial. Ainda assim, aborde com finalidade legítima, identifique-se, ofereça algo relevante e respeite quem pedir para não receber mensagens. Evite listas de pessoas físicas.</p></details>
+          <details><summary>O disparo no WhatsApp é automático?</summary><p>É assistido: o painel prepara cada mensagem personalizada e abre a conversa no seu WhatsApp, você só confirma o envio. Esse formato é gratuito e muito mais seguro contra bloqueios do que robôs de envio em massa.</p></details>
+          <details><summary>Onde ficam salvos meus leads?</summary><p>No armazenamento local do seu navegador. Nada é enviado para servidores do Radar Leads. Use o backup em Configurações para levar seus dados para outro computador.</p></details>
+          <details><summary>Consigo rodar as buscas automaticamente?</summary><p>Sim. Edite o arquivo de buscas do repositório e o GitHub Actions executa tudo semanalmente, salvando as planilhas. Também é possível disparar manualmente informando nicho e cidade.</p></details>
+        </div>
+      </div>
+    </section>
+
+    <section class="chamada">
+      <div class="envelope">
+        <div class="caixa-chamada">
+          <h2>Seus próximos clientes já estão no mapa</h2>
+          <p>Faça sua primeira busca agora. Sem cadastro, sem cartão e sem limite.</p>
+          <a class="btn btn-g" href="app.html"><svg><use href="#i-busca"/></svg>Abrir o painel gratuito</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <div class="envelope">
+      <a href="index.html" class="logo"><span class="logo-icone"><svg><use href="#i-radar"/></svg></span>Radar Leads</a>
+      <span>Dados de mapas © colaboradores do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, licença ODbL.</span>
+    </div>
+  </footer>
+</body>
+</html>

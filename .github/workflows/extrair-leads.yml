@@ -1,0 +1,86 @@
+name: Extrair leads automaticamente
+
+on:
+  # Execução manual: Actions > Extrair leads automaticamente > Run workflow
+  workflow_dispatch:
+    inputs:
+      nicho:
+        description: 'Nicho (vazio = usar automacao/buscas.json)'
+        required: false
+        default: ''
+      local:
+        description: 'Cidade, bairro ou endereço (várias: separe por ;)'
+        required: false
+        default: ''
+      raio:
+        description: 'Raio em km (0 = cidade inteira)'
+        required: false
+        default: '0'
+      fonte:
+        description: 'Fonte de dados'
+        type: choice
+        options: [osm, google]
+        default: osm
+      enriquecer:
+        description: 'Visitar os sites para achar e-mail, Instagram e WhatsApp'
+        type: boolean
+        default: true
+      salvar_no_repositorio:
+        description: 'Salvar as planilhas na pasta dados/ do repositório'
+        type: boolean
+        default: true
+  # Execução semanal (segunda-feira, 06:17 no horário de Brasília) com as buscas de automacao/buscas.json
+  schedule:
+    - cron: '17 9 * * 1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: extrair-leads
+  cancel-in-progress: false
+
+jobs:
+  extrair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Executar extração
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          NICHO: ${{ github.event.inputs.nicho }}
+          LOCAL: ${{ github.event.inputs.local }}
+          RAIO: ${{ github.event.inputs.raio }}
+          FONTE: ${{ github.event.inputs.fonte || 'osm' }}
+          ENRIQUECER: ${{ github.event_name == 'schedule' || github.event.inputs.enriquecer == 'true' }}
+        run: |
+          ARGS=(--fonte "$FONTE")
+          if [ "$ENRIQUECER" = "true" ]; then ARGS+=(--enriquecer); fi
+          if [ -n "$NICHO" ] && [ -n "$LOCAL" ]; then
+            ARGS+=(--nicho "$NICHO" --local "$LOCAL" --raio "${RAIO:-0}")
+          else
+            ARGS+=(--config automacao/buscas.json)
+          fi
+          node scripts/extrair-leads.mjs "${ARGS[@]}"
+      - name: Disponibilizar planilhas para download
+        uses: actions/upload-artifact@v4
+        with:
+          name: leads-${{ github.run_number }}
+          path: dados/
+          retention-days: 30
+      - name: Salvar no repositório
+        if: github.event_name == 'schedule' || github.event.inputs.salvar_no_repositorio == 'true'
+        run: |
+          git config user.name "radar-leads-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add dados/
+          if git diff --cached --quiet; then
+            echo "Nada novo para salvar."
+          else
+            git commit -m "Leads extraídos em $(date +%Y-%m-%d)"
+            git push
+          fi

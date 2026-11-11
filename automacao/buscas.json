@@ -1,0 +1,5 @@
+[
+  { "nicho": "dentista", "local": "Campinas, SP" },
+  { "nicho": "academia", "local": "Sorocaba, SP", "raioKm": 10 },
+  { "nicho": "pet shop", "local": "Jundiaí, SP" }
+]

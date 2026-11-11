@@ -1,0 +1,14 @@
+{
+  "name": "radar-leads",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Extrator gratuito de leads de empresas por nicho e cidade, com CRM e disparo assistido no WhatsApp.",
+  "type": "module",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "dev": "python3 -m http.server 8080",
+    "test": "node --test testes/*.test.mjs",
+    "extrair": "node scripts/extrair-leads.mjs",
+    "automacao": "node scripts/extrair-leads.mjs --config automacao/buscas.json --enriquecer"
+  }
+}

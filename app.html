@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Radar Leads | Painel</title>
+  <meta name="description" content="Painel do Radar Leads: encontre empresas por nicho e cidade, exporte para Excel, organize no CRM e aborde pelo WhatsApp.">
+  <meta name="theme-color" content="#0d9f6e">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <script>
+    try { const t = localStorage.getItem('radarleads:tema'); if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t; } catch (e) {}
+  </script>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-busca" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+    <symbol id="i-pessoas" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-enviar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></symbol>
+    <symbol id="i-relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="i-config" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+    <symbol id="i-baixar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></symbol>
+    <symbol id="i-zap" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm5.8 14.13c-.24.68-1.42 1.3-1.96 1.35-.5.05-.98.23-3.3-.69-2.8-1.1-4.56-3.97-4.7-4.15-.14-.18-1.12-1.49-1.12-2.85s.71-2.02.97-2.3c.25-.27.55-.34.73-.34l.53.01c.17 0 .4-.06.62.48.24.56.8 1.94.86 2.08.07.14.12.3.02.48-.09.18-.14.3-.27.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.56.16.27.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.2 1.36.28.14.44.11.6-.07.16-.18.69-.8.88-1.08.18-.27.37-.23.62-.14.25.09 1.6.76 1.88.9.27.13.45.2.52.31.06.12.06.66-.17 1.3Z"/></symbol>
+    <symbol id="i-telefone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z"/></symbol>
+    <symbol id="i-pino" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-globo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10Z"/></symbol>
+    <symbol id="i-email" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></symbol>
+    <symbol id="i-insta" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><path d="M17.5 6.5h.01"/></symbol>
+    <symbol id="i-face" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3Z"/></symbol>
+    <symbol id="i-estrela" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 3.1 6.3 6.9 1-5 4.9 1.2 6.8L12 17.8 5.8 21l1.2-6.8-5-4.9 6.9-1Z"/></symbol>
+    <symbol id="i-mais" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+    <symbol id="i-lixo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></symbol>
+    <symbol id="i-copiar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+    <symbol id="i-externo" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></symbol>
+    <symbol id="i-tabela" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></symbol>
+    <symbol id="i-mapa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m1 6 7-3 8 3 7-3v15l-7 3-8-3-7 3Z"/><path d="M8 3v15M16 6v15"/></symbol>
+    <symbol id="i-kanban" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="4" height="8" rx="1"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-radar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19.07 4.93A10 10 0 1 0 22 12"/><path d="M16.24 7.76A6 6 0 1 0 18 12"/><circle cx="12" cy="12" r="2"/><path d="m13.4 10.6 6-6"/></symbol>
+    <symbol id="i-lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8Z"/></symbol>
+    <symbol id="i-pular" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8ZM19 5v14"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
+  </svg>
+
+  <div class="app">
+    <aside class="lateral" id="lateral">
+      <a href="index.html" class="logo"><span class="logo-icone"><svg><use href="#i-radar"/></svg></span>Radar Leads</a>
+      <nav class="menu" aria-label="Seções do painel">
+        <a href="#buscar" data-rota="buscar"><svg><use href="#i-busca"/></svg>Buscar leads</a>
+        <a href="#leads" data-rota="leads"><svg><use href="#i-pessoas"/></svg>Meus leads <span class="contador" id="contador-crm">0</span></a>
+        <a href="#disparo" data-rota="disparo"><svg><use href="#i-enviar"/></svg>Disparo WhatsApp <span class="contador" id="contador-fila">0</span></a>
+        <a href="#historico" data-rota="historico"><svg><use href="#i-relogio"/></svg>Histórico</a>
+        <a href="#config" data-rota="config"><svg><use href="#i-config"/></svg>Configurações</a>
+      </nav>
+      <div class="lateral-rodape">
+        <div class="plano">
+          <span class="selo selo-marca">Plano livre</span>
+          <p>Buscas ilimitadas com dados do OpenStreetMap. Sem cartão e sem cadastro.</p>
+        </div>
+        <button class="btn btn-fantasma btn-p" id="alternar-tema" type="button"><svg><use href="#i-lua"/></svg>Alternar tema</button>
+      </div>
+    </aside>
+    <div class="veu" id="veu" hidden></div>
+
+    <main class="principal">
+      <header class="topo-movel">
+        <button class="btn btn-icone btn-fantasma" id="abrir-menu" type="button" aria-label="Abrir menu"><svg><use href="#i-menu"/></svg></button>
+        <a href="index.html" class="logo"><span class="logo-icone"><svg><use href="#i-radar"/></svg></span>Radar Leads</a>
+      </header>
+
+      <!-- BUSCAR -->
+      <section class="vista" id="vista-buscar" data-vista="buscar">
+        <div class="cabecalho-vista">
+          <div>
+            <h1>Buscar leads</h1>
+            <p class="sub">Escolha o nicho e a região. Encontramos empresas com telefone, WhatsApp, site, e-mail e redes sociais.</p>
+          </div>
+        </div>
+
+        <form class="cartao formulario-busca" id="form-busca" autocomplete="off">
+          <div class="grade-busca">
+            <div class="campo campo-nicho">
+              <label for="f-nicho">Nicho ou palavra-chave</label>
+              <input class="entrada" id="f-nicho" name="nicho" list="lista-nichos" placeholder="Ex.: dentista, pizzaria, academia" required>
+              <datalist id="lista-nichos"></datalist>
+            </div>
+            <div class="campo campo-local">
+              <label for="f-local">Cidade, bairro ou endereço</label>
+              <input class="entrada" id="f-local" name="local" placeholder="Ex.: Campinas, SP" required>
+            </div>
+            <div class="campo">
+              <label for="f-raio">Abrangência</label>
+              <select class="entrada" id="f-raio" name="raio">
+                <option value="0">Cidade inteira</option>
+                <option value="1">Raio de 1 km</option>
+                <option value="3">Raio de 3 km</option>
+                <option value="5">Raio de 5 km</option>
+                <option value="10">Raio de 10 km</option>
+                <option value="25">Raio de 25 km</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="f-fonte">Fonte de dados</label>
+              <select class="entrada" id="f-fonte" name="fonte">
+                <option value="osm">OpenStreetMap (grátis)</option>
+                <option value="google">Google Places (chave própria)</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label for="f-limite">Máximo</label>
+              <select class="entrada" id="f-limite" name="limite">
+                <option value="200">200</option>
+                <option value="500" selected>500</option>
+                <option value="1000">1.000</option>
+                <option value="2500">2.500</option>
+              </select>
+            </div>
+            <button class="btn btn-primario btn-g botao-buscar" type="submit" id="botao-buscar"><svg><use href="#i-busca"/></svg>Buscar</button>
+          </div>
+          <div class="sugestoes">
+            <span class="ajuda">Populares:</span>
+            <div id="chips-nichos" class="chips"></div>
+          </div>
+          <p class="ajuda dica">Dica: para buscar em várias cidades de uma vez, separe por ponto e vírgula. Ex.: <em>Campinas, SP; Valinhos, SP; Jundiaí, SP</em>.</p>
+        </form>
+
+        <div class="progresso" id="progresso" hidden>
+          <div class="giro" aria-hidden="true"></div>
+          <div>
+            <strong id="progresso-titulo">Buscando...</strong>
+            <span id="progresso-texto" class="ajuda"></span>
+          </div>
+          <button class="btn btn-p" type="button" id="cancelar-busca">Cancelar</button>
+        </div>
+
+        <div class="vazio cartao" id="estado-inicial">
+          <svg class="vazio-icone"><use href="#i-radar"/></svg>
+          <h3>Pronto para encontrar novos clientes</h3>
+          <p>Digite um nicho e uma cidade acima. Os resultados aparecem aqui com filtros, mapa, exportação para Excel e abordagem por WhatsApp.</p>
+        </div>
+
+        <div id="resultados" hidden>
+          <div class="indicadores" id="indicadores"></div>
+
+          <div class="barra-filtros cartao">
+            <div class="chips" id="filtros-rapidos" role="group" aria-label="Filtros rápidos"></div>
+            <div class="filtros-direita">
+              <input class="entrada entrada-p" id="filtro-texto" type="search" placeholder="Filtrar por nome, bairro, categoria">
+              <select class="entrada entrada-p" id="ordenacao" aria-label="Ordenar">
+                <option value="pontuacao">Mais completos</option>
+                <option value="nome">Nome (A a Z)</option>
+                <option value="categoria">Categoria</option>
+                <option value="bairro">Bairro</option>
+                <option value="avaliacao">Avaliação</option>
+              </select>
+              <div class="alternador" role="group" aria-label="Modo de visualização">
+                <button type="button" class="ativo" data-modo="tabela" title="Tabela"><svg><use href="#i-tabela"/></svg><span>Tabela</span></button>
+                <button type="button" data-modo="mapa" title="Mapa"><svg><use href="#i-mapa"/></svg><span>Mapa</span></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="barra-acoes" id="barra-acoes">
+            <span id="resumo-selecao" class="ajuda"></span>
+            <div class="acoes">
+              <button class="btn btn-p" type="button" id="acao-salvar"><svg><use href="#i-mais"/></svg>Salvar no CRM</button>
+              <button class="btn btn-p" type="button" id="acao-fila"><svg><use href="#i-zap"/></svg>Enviar para disparo</button>
+              <button class="btn btn-p" type="button" id="acao-copiar"><svg><use href="#i-copiar"/></svg>Copiar telefones</button>
+              <button class="btn btn-p" type="button" id="acao-csv"><svg><use href="#i-baixar"/></svg>CSV</button>
+              <button class="btn btn-p btn-primario" type="button" id="acao-excel"><svg><use href="#i-baixar"/></svg>Excel</button>
+            </div>
+          </div>
+
+          <div class="cartao bloco-tabela" id="bloco-tabela">
+            <div class="rolagem-tabela">
+              <table class="tabela" id="tabela-resultados">
+                <thead>
+                  <tr>
+                    <th class="col-sel"><input type="checkbox" id="selecionar-todos" aria-label="Selecionar todos"></th>
+                    <th>Empresa</th>
+                    <th>Contato</th>
+                    <th>Presença online</th>
+                    <th>Localização</th>
+                    <th>Qualidade</th>
+                    <th class="col-acoes">Ações</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+            <div class="paginacao" id="paginacao"></div>
+          </div>
+
+          <div class="cartao bloco-mapa" id="bloco-mapa" hidden>
+            <div id="mapa"></div>
+          </div>
+          <p class="atribuicao">Dados © colaboradores do <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, licença ODbL. Confira as informações antes do contato.</p>
+        </div>
+      </section>
+
+      <!-- MEUS LEADS (CRM) -->
+      <section class="vista" id="vista-leads" data-vista="leads" hidden>
+        <div class="cabecalho-vista">
+          <div>
+            <h1>Meus leads</h1>
+            <p class="sub">Seu funil de vendas. Arraste os cartões entre as etapas e registre cada conversa.</p>
+          </div>
+          <div class="acoes">
+            <div class="alternador" role="group" aria-label="Modo do CRM">
+              <button type="button" class="ativo" data-modo-crm="funil"><svg><use href="#i-kanban"/></svg><span>Funil</span></button>
+              <button type="button" data-modo-crm="lista"><svg><use href="#i-tabela"/></svg><span>Lista</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="barra-filtros cartao">
+          <div class="filtros-direita largura-total">
+            <input class="entrada entrada-p" id="crm-filtro" type="search" placeholder="Buscar nos meus leads">
+            <select class="entrada entrada-p" id="crm-etapa" aria-label="Filtrar etapa"><option value="">Todas as etapas</option></select>
+            <button class="btn btn-p" type="button" id="crm-fila"><svg><use href="#i-zap"/></svg>Disparo para filtrados</button>
+            <button class="btn btn-p" type="button" id="crm-csv"><svg><use href="#i-baixar"/></svg>CSV</button>
+            <button class="btn btn-p btn-primario" type="button" id="crm-excel"><svg><use href="#i-baixar"/></svg>Excel</button>
+          </div>
+        </div>
+        <div class="kpis-crm" id="kpis-crm"></div>
+        <div id="crm-funil" class="funil"></div>
+        <div id="crm-lista" class="cartao bloco-tabela" hidden>
+          <div class="rolagem-tabela"><table class="tabela" id="tabela-crm"><thead><tr><th>Empresa</th><th>Contato</th><th>Etapa</th><th>Atualizado</th><th class="col-acoes">Ações</th></tr></thead><tbody></tbody></table></div>
+        </div>
+        <div class="vazio cartao" id="crm-vazio" hidden>
+          <svg class="vazio-icone"><use href="#i-pessoas"/></svg>
+          <h3>Nenhum lead salvo ainda</h3>
+          <p>Faça uma busca, selecione as empresas que interessam e clique em <strong>Salvar no CRM</strong>.</p>
+          <a class="btn btn-primario" href="#buscar">Buscar leads</a>
+        </div>
+      </section>
+
+      <!-- DISPARO -->
+      <section class="vista" id="vista-disparo" data-vista="disparo" hidden>
+        <div class="cabecalho-vista">
+          <div>
+            <h1>Disparo assistido no WhatsApp</h1>
+            <p class="sub">Mensagens personalizadas, uma por vez, abertas no seu próprio WhatsApp. Sem custo e sem risco de bloqueio por automação.</p>
+          </div>
+        </div>
+        <div class="grade-disparo">
+          <div class="cartao painel">
+            <h3>Mensagem</h3>
+            <div class="campo">
+              <label for="d-modelo">Modelo</label>
+              <div class="linha">
+                <select class="entrada" id="d-modelo"></select>
+                <button class="btn btn-icone" type="button" id="d-novo-modelo" title="Novo modelo" aria-label="Novo modelo"><svg><use href="#i-mais"/></svg></button>
+                <button class="btn btn-icone btn-perigo" type="button" id="d-remover-modelo" title="Excluir modelo" aria-label="Excluir modelo"><svg><use href="#i-lixo"/></svg></button>
+              </div>
+            </div>
+            <div class="campo">
+              <label for="d-nome-modelo">Nome do modelo</label>
+              <input class="entrada" id="d-nome-modelo">
+            </div>
+            <div class="campo">
+              <label for="d-texto">Texto</label>
+              <textarea class="entrada" id="d-texto" rows="6"></textarea>
+              <div class="chips variaveis" id="d-variaveis"></div>
+            </div>
+            <div class="previa">
+              <span class="rotulo">Prévia com o próximo lead</span>
+              <div class="balao" id="d-previa"></div>
+            </div>
+          </div>
+
+          <div class="cartao painel">
+            <div class="linha entre">
+              <h3>Fila de envio</h3>
+              <button class="btn btn-p btn-perigo" type="button" id="d-limpar">Limpar fila</button>
+            </div>
+            <div class="barra-progresso"><span id="d-barra"></span></div>
+            <p class="ajuda" id="d-status"></p>
+            <div class="controle-disparo">
+              <button class="btn btn-zap btn-g" type="button" id="d-proximo"><svg><use href="#i-zap"/></svg>Abrir próximo no WhatsApp</button>
+              <button class="btn btn-g" type="button" id="d-pular"><svg><use href="#i-pular"/></svg>Pular</button>
+            </div>
+            <label class="caixa"><input type="checkbox" id="d-marcar-crm" checked> Mover para <strong>Contatado</strong> no CRM após abrir</label>
+            <p class="ajuda" id="d-intervalo"></p>
+            <ol class="fila" id="d-fila"></ol>
+          </div>
+        </div>
+        <div class="aviso cartao">
+          <strong>Boas práticas:</strong> envie apenas para empresas (contato B2B), personalize a mensagem, respeite quem pedir para não receber e mantenha um intervalo entre envios. Isso protege o seu número e está alinhado à LGPD e às políticas do WhatsApp.
+        </div>
+      </section>
+
+      <!-- HISTÓRICO -->
+      <section class="vista" id="vista-historico" data-vista="historico" hidden>
+        <div class="cabecalho-vista">
+          <div>
+            <h1>Histórico de buscas</h1>
+            <p class="sub">Repita uma busca com um clique para atualizar sua base.</p>
+          </div>
+          <button class="btn btn-p btn-perigo" type="button" id="h-limpar"><svg><use href="#i-lixo"/></svg>Limpar histórico</button>
+        </div>
+        <div class="cartao bloco-tabela">
+          <div class="rolagem-tabela"><table class="tabela" id="tabela-historico"><thead><tr><th>Nicho</th><th>Local</th><th>Abrangência</th><th>Fonte</th><th>Resultados</th><th>Data</th><th class="col-acoes"></th></tr></thead><tbody></tbody></table></div>
+        </div>
+      </section>
+
+      <!-- CONFIGURAÇÕES -->
+      <section class="vista" id="vista-config" data-vista="config" hidden>
+        <div class="cabecalho-vista">
+          <div>
+            <h1>Configurações</h1>
+            <p class="sub">Tudo fica salvo apenas neste navegador.</p>
+          </div>
+        </div>
+        <div class="grade-config">
+          <div class="cartao painel">
+            <h3>Google Places (opcional)</h3>
+            <p class="ajuda">Para trazer avaliações e mais telefones, use sua chave da Google Maps Platform com as APIs <em>Maps JavaScript</em> e <em>Places (New)</em> ativas. O Google oferece uma cota mensal gratuita; acima dela há cobrança. Restrinja a chave ao domínio do seu site.</p>
+            <div class="campo">
+              <label for="c-chave">Chave de API</label>
+              <input class="entrada" id="c-chave" type="password" placeholder="AIza...">
+            </div>
+            <div class="linha">
+              <button class="btn btn-primario" type="button" id="c-salvar-chave">Salvar chave</button>
+              <button class="btn" type="button" id="c-remover-chave">Remover</button>
+            </div>
+          </div>
+          <div class="cartao painel">
+            <h3>Backup dos dados</h3>
+            <p class="ajuda">Exporte seus leads, histórico e modelos para um arquivo e restaure em outro computador.</p>
+            <div class="linha">
+              <button class="btn" type="button" id="c-backup"><svg><use href="#i-baixar"/></svg>Baixar backup</button>
+              <label class="btn"><svg><use href="#i-upload"/></svg>Restaurar<input type="file" id="c-restaurar" accept="application/json,.json" hidden></label>
+            </div>
+            <hr>
+            <h3>Importar planilha</h3>
+            <p class="ajuda">Traga leads de um arquivo CSV (por exemplo, gerado pela automação do GitHub Actions) direto para o CRM.</p>
+            <label class="btn"><svg><use href="#i-upload"/></svg>Importar CSV<input type="file" id="c-importar-csv" accept=".csv,text/csv" hidden></label>
+          </div>
+          <div class="cartao painel">
+            <h3>Zona de risco</h3>
+            <p class="ajuda">Apaga CRM, histórico, modelos e fila deste navegador. Não pode ser desfeito.</p>
+            <button class="btn btn-perigo" type="button" id="c-apagar"><svg><use href="#i-lixo"/></svg>Apagar todos os dados</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog class="modal" id="modal-lead">
+    <div class="modal-conteudo" id="modal-lead-conteudo"></div>
+  </dialog>
+
+  <div class="avisos" id="avisos" aria-live="polite"></div>
+
+  <script src="assets/vendor/leaflet/leaflet.js" defer></script>
+  <script src="assets/vendor/xlsx.mini.min.js" defer></script>
+  <script type="module" src="assets/js/app.js"></script>
+</body>
+</html>
