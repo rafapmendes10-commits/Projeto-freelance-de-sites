@@ -82,7 +82,7 @@
         <div class="cabecalho-vista">
           <div>
             <h1>Buscar leads</h1>
-            <p class="sub">Escolha o nicho e a região. Encontramos empresas com telefone, WhatsApp, site, e-mail e redes sociais.</p>
+            <p class="sub">Escolha o nicho e a região. O Radar diagnostica cada comércio e mostra onde está a melhor oportunidade de vender um site.</p>
           </div>
         </div>
 
@@ -156,7 +156,8 @@
             <div class="filtros-direita">
               <input class="entrada entrada-p" id="filtro-texto" type="search" placeholder="Filtrar por nome, bairro, categoria">
               <select class="entrada entrada-p" id="ordenacao" aria-label="Ordenar">
-                <option value="pontuacao">Mais completos</option>
+                <option value="oportunidade">Maior oportunidade</option>
+                <option value="pontuacao">Cadastro mais completo</option>
                 <option value="nome">Nome (A a Z)</option>
                 <option value="categoria">Categoria</option>
                 <option value="bairro">Bairro</option>
@@ -173,6 +174,7 @@
             <span id="resumo-selecao" class="ajuda"></span>
             <div class="acoes">
               <button class="btn btn-p" type="button" id="acao-salvar"><svg><use href="#i-mais"/></svg>Salvar no CRM</button>
+              <button class="btn btn-p" type="button" id="acao-prompts"><svg><use href="#i-varinha"/></svg>Prompts das prévias</button>
               <button class="btn btn-p" type="button" id="acao-fila"><svg><use href="#i-zap"/></svg>Enviar para disparo</button>
               <button class="btn btn-p" type="button" id="acao-copiar"><svg><use href="#i-copiar"/></svg>Copiar telefones</button>
               <button class="btn btn-p" type="button" id="acao-csv"><svg><use href="#i-baixar"/></svg>CSV</button>
@@ -190,7 +192,7 @@
                     <th>Contato</th>
                     <th>Presença online</th>
                     <th>Localização</th>
-                    <th>Qualidade</th>
+                    <th>Oportunidade</th>
                     <th class="col-acoes">Ações</th>
                   </tr>
                 </thead>
@@ -225,6 +227,8 @@
           <div class="filtros-direita largura-total">
             <input class="entrada entrada-p" id="crm-filtro" type="search" placeholder="Buscar nos meus leads">
             <select class="entrada entrada-p" id="crm-etapa" aria-label="Filtrar etapa"><option value="">Todas as etapas</option></select>
+            <button class="btn btn-p" type="button" id="crm-prompts"><svg><use href="#i-varinha"/></svg>Prompts das prévias</button>
+            <button class="btn btn-p" type="button" id="crm-verificar"><svg><use href="#i-relogio"/></svg>Verificar prévias publicadas</button>
             <button class="btn btn-p" type="button" id="crm-fila"><svg><use href="#i-zap"/></svg>Disparo para filtrados</button>
             <button class="btn btn-p" type="button" id="crm-csv"><svg><use href="#i-baixar"/></svg>CSV</button>
             <button class="btn btn-p btn-primario" type="button" id="crm-excel"><svg><use href="#i-baixar"/></svg>Excel</button>

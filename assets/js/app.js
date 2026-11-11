@@ -4,7 +4,7 @@ import { NICHOS, encontrarNicho } from './nichos.js';
 import { buscarLeadsOsm, deduplicar } from './fontes/osm.js';
 import { buscarLeadsGoogleNavegador } from './fontes/google.js';
 import { baixarCsv, baixarExcel, baixarJson, COLUNAS } from './exportar.js';
-import { linkDaPrevia, dadosDaPrevia, documentoCompleto, linkLovable, briefingDoSite } from './modelo-site.js';
+import { enriquecerOportunidades, promptDaPrevia, promptEmLote, promptSiteFinal, caminhoPrevia, slugPrevia } from './oportunidade.js';
 import { crm, config, historico, fila, sessao, ETAPAS, backupCompleto, restaurarBackup, apagarTudo } from './armazenamento.js';
 import {
   escaparHtml as h, slug, preencherModelo, linkWhatsApp, formatarData, interpretarTelefones,
@@ -24,7 +24,7 @@ const estado = {
   porPagina: 50,
   filtros: new Set(),
   texto: '',
-  ordem: 'pontuacao',
+  ordem: 'oportunidade',
   modo: 'tabela',
   contexto: null,
   controlador: null,
@@ -73,22 +73,53 @@ function modeloAtivo() {
   return c.modelos.find((m) => m.id === c.modeloAtivo) || c.modelos[0] || { texto: '' };
 }
 
+/** Pasta pública do site (onde ficam app.html e previas/). */
 function baseDoSite() {
   const c = config.obter();
   if (c.siteBase) return c.siteBase.endsWith('/') ? c.siteBase : `${c.siteBase}/`;
-  return location.href.split('#')[0].split('?')[0];
+  return new URL('./', location.href.split('#')[0].split('?')[0]).href;
 }
 
+/** Link da prévia personalizada já registrada para o lead (ou vazio). */
 function previaDe(lead) {
+  return crm.obter(lead.id)?.linkPrevia || lead.linkPrevia || '';
+}
+
+function configPrompt() {
   const c = config.obter();
-  return linkDaPrevia(lead, baseDoSite(), { nome: c.agenciaNome, whatsapp: c.agenciaWhatsapp });
+  return { baseSite: baseDoSite(), agenciaNome: c.agenciaNome, agenciaWhatsapp: c.agenciaWhatsapp };
+}
+
+const verificadas = new Map();
+
+/** Confere se a prévia já foi publicada em previas/<slug>/ e, se sim, registra o link no CRM. */
+async function verificarPrevia(lead, { forcar = false } = {}) {
+  const url = new URL(caminhoPrevia(lead), baseDoSite()).href;
+  if (!forcar && verificadas.has(url)) return verificadas.get(url);
+  let ok = false;
+  try {
+    const r = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    ok = r.ok;
+  } catch { ok = false; }
+  verificadas.set(url, ok);
+  if (ok && crm.tem(lead.id) && crm.obter(lead.id).linkPrevia !== url) crm.atualizar(lead.id, { linkPrevia: url });
+  return ok;
+}
+
+/** Copia o prompt individual e garante que o lead esteja no CRM (para guardar o link da prévia depois). */
+function copiarPromptDaPrevia(lead) {
+  if (!crm.tem(lead.id)) { crm.salvarVarios([lead]); atualizarContadores(); }
+  const prompt = promptDaPrevia(crm.obter(lead.id) || lead, configPrompt());
+  copiarTexto(prompt, `Prompt da ${lead.nome} copiado. Cole na conversa com o Claude.`);
+  crm.atualizar(lead.id, { promptGeradoEm: new Date().toISOString() });
+  return prompt;
 }
 
 function extrasMensagem(lead) {
   const c = config.obter();
   return {
     nicho: (lead.nicho || lead.categoria || '').toLowerCase(),
-    link_previa: previaDe(lead),
+    link_previa: previaDe(lead) || '{link_previa}',
     minha_marca: c.agenciaNome || 'especialista em criação de sites',
   };
 }
@@ -251,6 +282,7 @@ async function executarBusca(parametros) {
 }
 
 function definirResultados(leads, { salvarSessao = true } = {}) {
+  enriquecerOportunidades(leads);
   estado.resultados = leads;
   estado.selecionados.clear();
   estado.pagina = 1;
@@ -270,13 +302,14 @@ function aplicarFiltros() {
   const ordem = estado.ordem;
   const porTexto = (campo) => (a, b) => (a[campo] || 'zzz').localeCompare(b[campo] || 'zzz', 'pt-BR');
   const ordenadores = {
+    oportunidade: (a, b) => (b.oportunidade || 0) - (a.oportunidade || 0) || b.pontuacao - a.pontuacao,
     pontuacao: (a, b) => b.pontuacao - a.pontuacao || a.nome.localeCompare(b.nome, 'pt-BR'),
     nome: porTexto('nome'),
     categoria: porTexto('categoria'),
     bairro: porTexto('bairro'),
     avaliacao: (a, b) => (b.avaliacao || 0) - (a.avaliacao || 0) || (b.numAvaliacoes || 0) - (a.numAvaliacoes || 0),
   };
-  lista.sort(ordenadores[ordem] || ordenadores.pontuacao);
+  lista.sort(ordenadores[ordem] || ordenadores.oportunidade);
   estado.filtrados = lista;
   const paginas = Math.max(1, Math.ceil(lista.length / estado.porPagina));
   if (estado.pagina > paginas) estado.pagina = paginas;
@@ -372,10 +405,11 @@ function renderizarTabela() {
         <td class="c-contato">${celulaContato(l)}</td>
         <td class="c-online">${iconesOnline(l)}</td>
         <td class="c-local"><div class="local">${h(l.endereco || [l.bairro, l.cidade].filter(Boolean).join(', ') || 'Endereço não informado')}</div></td>
-        <td class="c-qual"><div class="qualidade" title="Pontuação de completude do cadastro"><div class="trilho"><span style="width:${l.pontuacao}%"></span></div><b>${l.pontuacao}</b></div></td>
+        <td class="c-qual"><div class="qualidade" title="${h((l.motivos || []).join('\n'))}"><div class="trilho"><span style="width:${l.oportunidade || 0}%"></span></div><b>${l.oportunidade || 0}</b></div>
+          <div class="motivo">${h(motivoCurto(l))}</div></td>
         <td class="c-acoes col-acoes"><div class="acoes-linha">
           <button type="button" class="btn btn-zap" data-acao="zap" title="Enviar prévia pelo WhatsApp" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}</button>
-          <button type="button" class="btn" data-acao="previa" title="Ver prévia gratuita do site">${ico('varinha')}</button>
+          <button type="button" class="btn ${previaDe(l) ? 'salvo' : ''}" data-acao="prompt" title="${previaDe(l) ? 'Prévia personalizada pronta' : 'Copiar prompt da prévia personalizada'}">${ico('varinha')}</button>
           <a class="btn" href="${h(l.linkMaps)}" target="_blank" rel="noopener" title="Ver no Google Maps">${ico('pino')}</a>
           <button type="button" class="btn ${salvo ? 'salvo' : ''}" data-acao="salvar" title="${salvo ? 'Já está no CRM' : 'Salvar no CRM'}">${ico(salvo ? 'check' : 'mais')}</button>
         </div></td>
@@ -498,7 +532,7 @@ function prepararResultados() {
       renderizarTabela();
     } else if (acao === 'detalhe') abrirDetalhe(lead);
     else if (acao === 'zap') abrirWhatsApp(lead);
-    else if (acao === 'previa') abrirExterno(previaDe(lead));
+    else if (acao === 'prompt') { if (previaDe(lead)) abrirDetalhe(lead); else { copiarPromptDaPrevia(lead); renderizarTabela(); } }
     else if (acao === 'salvar') salvarNoCrm([lead]);
   });
 
@@ -527,6 +561,7 @@ function prepararResultados() {
   $('#acao-salvar').addEventListener('click', () => salvarNoCrm(alvoDasAcoes()));
   $('#acao-fila').addEventListener('click', () => adicionarNaFila(alvoDasAcoes()));
   $('#acao-copiar').addEventListener('click', () => copiarTelefones(alvoDasAcoes()));
+  $('#acao-prompts').addEventListener('click', () => gerarPromptsEmLote(alvoDasAcoes()));
   $('#acao-csv').addEventListener('click', () => { const a = comPrevia(alvoDasAcoes()); if (a.length) { baixarCsv(a, nomeArquivo()); aviso(`${fmt(a.length)} leads exportados em CSV.`); } });
   $('#acao-excel').addEventListener('click', () => { const a = comPrevia(alvoDasAcoes()); if (a.length) { baixarExcel(a, nomeArquivo()); aviso(`${fmt(a.length)} leads exportados para Excel.`); } });
 }
@@ -568,7 +603,7 @@ function renderizarMapa() {
 
 function abrirDetalhe(leadBase) {
   const salvo = crm.obter(leadBase.id);
-  const l = salvo || leadBase;
+  const l = salvo ? { ...leadBase, ...salvo } : leadBase;
   const linhas = [
     ['Categoria', h(l.categoria)],
     ['Telefones', (l.telefones?.length ? l.telefones : [l.telefone]).filter(Boolean).map(h).join('<br>') || '<span class="sem-dado">Não informado</span>'],
@@ -580,7 +615,7 @@ function abrirDetalhe(leadBase) {
     ['Endereço', h(l.endereco || [l.bairro, l.cidade, l.uf].filter(Boolean).join(', ')) || '<span class="sem-dado">Não informado</span>'],
     ['Horário', h(l.horario) || '<span class="sem-dado">Não informado</span>'],
     ['Avaliação', l.avaliacao ? `${String(l.avaliacao).replace('.', ',')} de 5 (${fmt(l.numAvaliacoes)} avaliações)` : '<span class="sem-dado">Disponível com a fonte Google</span>'],
-    ['Pontuação', `${l.pontuacao} de 100`],
+    ['Cadastro', `${l.pontuacao} de 100 em completude`],
     ['Fonte', `${h(l.fonte)}${l.linkOsm ? `, <a href="${h(l.linkOsm)}" target="_blank" rel="noopener">corrigir dados no OSM</a>` : ''}`],
   ];
   const conteudo = $('#modal-lead-conteudo');
@@ -590,19 +625,19 @@ function abrirDetalhe(leadBase) {
       <button class="btn btn-icone btn-fantasma" type="button" data-fechar aria-label="Fechar">${ico('x')}</button>
     </div>
     <div class="acoes">
-      <button class="btn btn-zap" type="button" data-m="zap" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}Enviar prévia</button>
-      <a class="btn" href="${h(previaDe(l))}" target="_blank" rel="noopener">${ico('varinha')}Ver prévia do site</a>
-      <button class="btn" type="button" data-m="copiar-previa">${ico('copiar')}Copiar link</button>
+      <button class="btn btn-zap" type="button" data-m="zap" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}WhatsApp</button>
       ${l.telefone ? `<a class="btn" href="tel:+55${h(l.telefone.replace(/\D/g, ''))}">${ico('telefone')}Ligar</a>` : ''}
       <a class="btn" href="${h(l.linkMaps)}" target="_blank" rel="noopener">${ico('pino')}Maps</a>
-      ${salvo ? `<button class="btn btn-perigo" type="button" data-m="remover">${ico('lixo')}Remover do CRM</button>` : `<button class="btn btn-primario" type="button" data-m="salvar">${ico('mais')}Salvar no CRM</button>`}
+      ${salvo ? `<button class="btn btn-perigo" type="button" data-m="remover">${ico('lixo')}Remover do CRM</button>` : `<button class="btn" type="button" data-m="salvar">${ico('mais')}Salvar no CRM</button>`}
     </div>
+    ${blocoDiagnostico(l)}
+    ${blocoPrevia(l, salvo)}
     ${blocoVenda(salvo)}
-    <dl class="dados">${linhas.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
+    <details class="detalhes-dados"><summary>Dados cadastrais</summary><dl class="dados">${linhas.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></details>
     ${salvo ? `
       <div class="campo"><label for="m-etapa">Etapa no funil</label>
         <select class="entrada" id="m-etapa">${ETAPAS.map((e) => `<option value="${e.id}" ${e.id === salvo.etapa ? 'selected' : ''}>${e.rotulo}</option>`).join('')}</select></div>
-      <div class="campo"><label for="m-notas">Anotações (também vão para o briefing do site)</label>
+      <div class="campo"><label for="m-notas">Anotações (vão para o prompt do site final)</label>
         <textarea class="entrada" id="m-notas" placeholder="Ex.: falei com a Ana, quer destacar implantes e aparelho ortodôntico.">${h(salvo.notas || '')}</textarea></div>
       ${salvo.historico?.length ? `<div><span class="rotulo">Movimentações</span><ul class="linha-tempo">${salvo.historico.slice(-6).reverse().map((x) => `<li>${formatarData(x.em)}: ${h(rotuloEtapa(x.de))} para ${h(rotuloEtapa(x.para))}</li>`).join('')}</ul></div>` : ''}
       <div class="linha"><button class="btn btn-primario" type="button" data-m="gravar">Salvar alterações</button></div>` : ''}
@@ -613,7 +648,6 @@ function abrirDetalhe(leadBase) {
     if (e.target.closest('[data-fechar]')) return dialogo.close();
     const m = e.target.closest('[data-m]')?.dataset.m;
     if (m === 'zap') abrirWhatsApp(l);
-    if (m === 'copiar-previa') copiarTexto(previaDe(l), 'Link da prévia copiado.');
     if (m === 'salvar') { crm.salvarVarios([leadBase]); atualizarContadores(); abrirDetalhe(leadBase); renderizarTabela(); aviso('Lead salvo no CRM.'); }
     if (m === 'remover') { crm.remover(l.id); atualizarContadores(); dialogo.close(); renderizarTabela(); renderizarCrmSeVisivel(); aviso('Lead removido do CRM.'); }
     if (m === 'gravar') {
@@ -622,16 +656,34 @@ function abrirDetalhe(leadBase) {
       renderizarCrmSeVisivel();
       aviso('Alterações salvas.');
     }
+    if (m === 'copiar-prompt') { copiarPromptDaPrevia(l); renderizarTabela(); abrirDetalhe(leadBase); }
+    if (m === 'baixar-prompt') {
+      if (!crm.tem(l.id)) { crm.salvarVarios([l]); atualizarContadores(); }
+      baixarArquivo(promptDaPrevia(crm.obter(l.id), configPrompt()), `prompt-previa-${slugPrevia(l)}.md`, 'text/markdown;charset=utf-8');
+    }
+    if (m === 'verificar') {
+      verificarPrevia(l, { forcar: true }).then((ok) => {
+        aviso(ok ? 'Prévia encontrada e registrada.' : 'A prévia ainda não foi publicada nesse endereço. A publicação leva 1 a 2 minutos após o envio.', ok ? 'ok' : 'erro');
+        if (ok) { renderizarTabela(); renderizarCrmSeVisivel(); abrirDetalhe(leadBase); }
+      });
+    }
+    if (m === 'salvar-link') {
+      const link = $('#m-link-previa').value.trim();
+      if (link && !/^https?:\/\//.test(link)) return aviso('O link deve começar com https://', 'erro');
+      if (!crm.tem(l.id)) crm.salvarVarios([l]);
+      crm.atualizar(l.id, { linkPrevia: link });
+      atualizarContadores(); renderizarTabela(); renderizarCrmSeVisivel(); abrirDetalhe(leadBase);
+      aviso(link ? 'Link da prévia salvo. Ele já entra na mensagem de WhatsApp.' : 'Link removido.');
+    }
+    if (m === 'copiar-link') copiarTexto(previaDe(l), 'Link da prévia copiado.');
     if (m === 'pago') {
       const valor = $('#m-valor')?.value.trim() || '';
       const atualizado = crm.atualizar(l.id, { etapa: 'pago', pagoEm: new Date().toISOString(), valor, notas: notasAtuais() });
-      baixarSitePronto(atualizado);
-      aviso('Pagamento registrado. O site pronto foi baixado e as opções de produção estão abertas.');
+      copiarTexto(promptSiteFinal(atualizado, configPrompt()), 'Pagamento registrado. O prompt do site final foi copiado: cole na conversa com o Claude.');
       renderizarCrmSeVisivel();
       abrirDetalhe(atualizado);
     }
-    if (m === 'baixar-site') baixarSitePronto({ ...l, notas: notasAtuais() });
-    if (m === 'briefing') copiarTexto(briefingDoSite(dadosDaPrevia(l), { observacoes: notasAtuais() }), 'Briefing copiado. Cole na conversa com o Claude ou em outra ferramenta.');
+    if (m === 'prompt-final') copiarTexto(promptSiteFinal({ ...l, notas: notasAtuais() }, configPrompt()), 'Prompt do site final copiado. Cole na conversa com o Claude.');
     if (m === 'entregue') {
       const atualizado = crm.atualizar(l.id, { etapa: 'ganho', entregueEm: new Date().toISOString(), notas: notasAtuais() });
       aviso('Site marcado como entregue.');
@@ -640,43 +692,89 @@ function abrirDetalhe(leadBase) {
     }
   };
   if (!dialogo.open) dialogo.showModal();
+  if (salvo && !salvo.linkPrevia && salvo.promptGeradoEm) {
+    verificarPrevia(l).then((ok) => { if (ok && dialogo.open) abrirDetalhe(leadBase); });
+  }
 }
 
-function baixarSitePronto(lead) {
-  const html = documentoCompleto(dadosDaPrevia(lead));
-  baixarArquivo(html, `site-${slug(lead.nome)}.html`, 'text/html;charset=utf-8');
+function motivoCurto(l) {
+  const m = (l.motivos || [])[0] || '';
+  return m.split(':')[0];
+}
+
+function blocoDiagnostico(l) {
+  const c = l.concorrencia;
+  return `<div class="bloco-diagnostico">
+    <div class="linha entre"><strong>Diagnóstico de oportunidade</strong><span class="selo selo-marca">${l.oportunidade ?? 0} de 100</span></div>
+    <ul>${(l.motivos || []).map((m) => `<li>${h(m)}</li>`).join('')}</ul>
+    ${c ? `<p class="ajuda">Concorrência num raio de ${String(c.raioKm).replace('.', ',')} km: ${fmt(c.total)} do mesmo segmento, ${fmt(c.comSite)} com site${c.exemplosComSite?.length ? ` (${h(c.exemplosComSite.join(', '))})` : ''}.</p>` : ''}
+    ${l.caracteristicas?.length ? `<div class="chips">${l.caracteristicas.map((x) => `<span class="selo">${h(x)}</span>`).join('')}</div>` : ''}
+  </div>`;
+}
+
+function blocoPrevia(l, salvo) {
+  const link = previaDe(l);
+  const caminho = new URL(caminhoPrevia(l), baseDoSite()).href;
+  return `<div class="bloco-venda ${link ? 'pronta' : ''}">
+    <div class="linha entre"><strong>Prévia personalizada</strong>
+      ${link ? '<span class="selo selo-marca">Pronta para enviar</span>' : salvo?.promptGeradoEm ? `<span class="selo selo-acento">Prompt gerado em ${formatarData(salvo.promptGeradoEm)}</span>` : '<span class="selo">Ainda não criada</span>'}</div>
+    ${link ? `<div class="acoes">
+        <a class="btn btn-primario" href="${h(link)}" target="_blank" rel="noopener">${ico('externo')}Ver prévia</a>
+        <button class="btn" type="button" data-m="copiar-link">${ico('copiar')}Copiar link</button>
+        <button class="btn btn-zap" type="button" data-m="zap" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}Enviar ao cliente</button>
+      </div>` : `<p class="ajuda">1. Copie o prompt e cole na conversa com o Claude. 2. Ele pesquisa o comércio, cria a prévia exclusiva e publica em <em>${h(caminho)}</em>. 3. Clique em "Verificar publicação" e o link entra sozinho na mensagem de WhatsApp.</p>
+      <div class="acoes">
+        <button class="btn btn-primario" type="button" data-m="copiar-prompt">${ico('varinha')}Copiar prompt para o Claude</button>
+        <button class="btn" type="button" data-m="baixar-prompt">${ico('baixar')}Baixar prompt</button>
+        <button class="btn" type="button" data-m="verificar">${ico('relogio')}Verificar publicação</button>
+      </div>`}
+    <div class="linha">
+      <input class="entrada" id="m-link-previa" placeholder="Ou cole aqui o link de uma prévia feita em outra ferramenta" value="${h(link)}">
+      <button class="btn" type="button" data-m="salvar-link">Salvar link</button>
+    </div>
+  </div>`;
 }
 
 function blocoVenda(salvo) {
-  if (!salvo) {
-    return `<div class="bloco-venda"><strong>Venda e produção do site</strong>
-      <p class="ajuda">Salve este lead no CRM para registrar o pagamento e liberar a produção do site.</p></div>`;
-  }
+  if (!salvo) return '';
   const pago = salvo.etapa === 'pago' || salvo.etapa === 'ganho';
   if (!pago) {
     return `<div class="bloco-venda">
-      <strong>Venda e produção do site</strong>
-      <p class="ajuda">Quando o cliente pagar o sinal, registre aqui. O site pronto é gerado na hora.</p>
+      <strong>Venda</strong>
+      <p class="ajuda">Quando o cliente pagar o sinal, registre aqui. O prompt do site final é copiado na hora para você colar na conversa com o Claude.</p>
       <div class="linha">
         <input class="entrada" id="m-valor" inputmode="decimal" placeholder="Valor combinado, ex.: 1.200" value="${h(salvo.valor || '')}">
         <button class="btn btn-primario" type="button" data-m="pago">${ico('check')}Pagamento prévio realizado</button>
       </div>
     </div>`;
   }
-  const d = dadosDaPrevia(salvo);
   return `<div class="bloco-venda pago">
-    <div class="linha entre"><strong>${salvo.etapa === 'ganho' ? 'Site entregue' : 'Pagamento recebido: produzir o site'}</strong>
+    <div class="linha entre"><strong>${salvo.etapa === 'ganho' ? 'Site entregue' : 'Pagamento recebido: produzir o site final'}</strong>
       <span class="selo selo-roxo">Pago em ${formatarData(salvo.pagoEm)}${salvo.valor ? ` · R$ ${h(salvo.valor)}` : ''}</span></div>
     <div class="acoes">
-      <button class="btn btn-primario" type="button" data-m="baixar-site">${ico('baixar')}Baixar site pronto</button>
-      <a class="btn" href="${h(linkLovable(d, { observacoes: salvo.notas }))}" target="_blank" rel="noopener">${ico('varinha')}Criar versão completa no Lovable</a>
-      <button class="btn" type="button" data-m="briefing">${ico('copiar')}Copiar briefing para o Claude</button>
+      <button class="btn btn-primario" type="button" data-m="prompt-final">${ico('copiar')}Copiar prompt do site final</button>
+      <a class="btn" href="https://lovable.dev/#prompt=${encodeURIComponent(promptSiteFinal(salvo, configPrompt()).slice(0, 45000))}" target="_blank" rel="noopener">${ico('varinha')}Abrir no Lovable</a>
       ${salvo.etapa === 'pago' ? `<button class="btn" type="button" data-m="entregue">${ico('check')}Marcar como entregue</button>` : ''}
     </div>
-    <p class="ajuda"><strong>Site pronto:</strong> arquivo único, com SEO local, mapa e WhatsApp; renomeie para <em>index.html</em> e publique na Cloudflare Pages ou Netlify.
-      <strong>Lovable:</strong> abre com o briefing preenchido; a construção começa quando você clicar em enviar.
-      <strong>Claude:</strong> cole o briefing aqui na conversa e eu crio uma versão personalizada.</p>
+    <p class="ajuda">O prompt parte da prévia aprovada e inclui suas anotações. Cole na conversa com o Claude para gerar o site definitivo, ou use o Lovable (a construção começa quando você clicar em enviar).</p>
   </div>`;
+}
+
+async function gerarPromptsEmLote(leads) {
+  let alvo = leads.filter((l) => l.whatsapp || l.telefone);
+  if (!alvo.length) return aviso('Nenhum lead com telefone para abordar.', 'erro');
+  alvo = [...alvo].sort((a, b) => (b.oportunidade || 0) - (a.oportunidade || 0));
+  const limite = 10;
+  if (alvo.length > limite && !confirm(`Gerar prompts para os ${limite} leads de maior oportunidade (de ${alvo.length})? Prévias sob medida rendem mais em lotes pequenos.`)) return;
+  alvo = alvo.slice(0, limite);
+  crm.salvarVarios(alvo);
+  const agora = new Date().toISOString();
+  for (const l of alvo) crm.atualizar(l.id, { promptGeradoEm: agora });
+  const prompt = promptEmLote(alvo.map((l) => crm.obter(l.id)), configPrompt());
+  baixarArquivo(prompt, `prompts-previas-${new Date().toISOString().slice(0, 10)}.md`, 'text/markdown;charset=utf-8');
+  await copiarTexto(prompt, `${alvo.length} prompts copiados e baixados. Cole na conversa com o Claude.`);
+  atualizarContadores();
+  renderizarTabela();
 }
 
 function formatarZap(n) {
@@ -730,7 +828,7 @@ function renderizarCrm() {
               <span class="ajuda">${h(l.telefone || 'Sem telefone')}</span>
               <span class="acoes-linha">
                 <button class="btn btn-zap" type="button" data-c="zap" title="WhatsApp" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}</button>
-                <button class="btn" type="button" data-c="previa" title="Ver prévia do site">${ico('varinha')}</button>
+                <button class="btn ${l.linkPrevia ? 'salvo' : ''}" type="button" data-c="previa" title="${l.linkPrevia ? 'Ver prévia personalizada' : 'Copiar prompt da prévia'}">${ico('varinha')}</button>
                 <button class="btn" type="button" data-c="detalhe" title="${l.etapa === 'pago' ? 'Produzir site' : 'Abrir e registrar pagamento'}">${ico(l.etapa === 'pago' ? 'baixar' : 'externo')}</button>
               </span>
             </div>
@@ -766,6 +864,16 @@ function prepararCrm() {
   $('#crm-csv').addEventListener('click', () => { const l = comPrevia(leadsCrmFiltrados()); if (l.length) baixarCsv(l, nomeCrm()); });
   $('#crm-excel').addEventListener('click', () => { const l = comPrevia(leadsCrmFiltrados()); if (l.length) baixarExcel(l, nomeCrm()); });
   $('#crm-fila').addEventListener('click', () => adicionarNaFila(leadsCrmFiltrados()));
+  $('#crm-prompts').addEventListener('click', () => gerarPromptsEmLote(leadsCrmFiltrados().filter((l) => !l.linkPrevia)));
+  $('#crm-verificar').addEventListener('click', async () => {
+    const pendentes = crm.lista().filter((l) => !l.linkPrevia && l.promptGeradoEm);
+    if (!pendentes.length) return aviso('Nenhuma prévia aguardando publicação.');
+    aviso(`Verificando ${pendentes.length} prévia(s)...`);
+    let achadas = 0;
+    for (const l of pendentes) if (await verificarPrevia(l, { forcar: true })) achadas++;
+    renderizarCrm();
+    aviso(achadas ? `${achadas} prévia(s) publicadas e registradas. Os links já entram nas mensagens.` : 'Nenhuma prévia nova publicada ainda.', achadas ? 'ok' : 'erro');
+  });
 
   const vista = $('#vista-leads');
   vista.addEventListener('click', (e) => {
@@ -776,7 +884,7 @@ function prepararCrm() {
     if (!l) return;
     if (alvo.dataset.c === 'zap') abrirWhatsApp(l);
     if (alvo.dataset.c === 'detalhe') abrirDetalhe(l);
-    if (alvo.dataset.c === 'previa') abrirExterno(previaDe(l));
+    if (alvo.dataset.c === 'previa') { if (l.linkPrevia) abrirExterno(l.linkPrevia); else { copiarPromptDaPrevia(l); renderizarCrm(); } }
     if (alvo.dataset.c === 'remover' && confirm(`Remover ${l.nome} do CRM?`)) { crm.remover(id); atualizarContadores(); renderizarCrm(); }
   });
   vista.addEventListener('change', (e) => {
@@ -839,7 +947,7 @@ function renderizarFila() {
     : 'A fila está vazia. Na busca ou no CRM, use "Enviar para disparo".';
   $('#d-fila').innerHTML = itens.map((i) => `
     <li class="${proximo && i.id === proximo.id ? 'atual' : ''}">
-      <div><div class="nome">${h(i.nome)}</div><div class="tel">${h(i.telefone || i.whatsapp)}</div></div>
+      <div><div class="nome">${h(i.nome)}</div><div class="tel">${h(i.telefone || i.whatsapp)}${previaDe(i) ? ' · prévia pronta' : ' · <span class="sem-previa">sem prévia</span>'}</div></div>
       <span class="selo ${i.estado === 'enviado' ? 'selo-marca' : i.estado === 'pulado' ? '' : 'selo-acento'}">${i.estado === 'enviado' ? 'Enviado' : i.estado === 'pulado' ? 'Pulado' : 'Pendente'}</span>
     </li>`).join('');
   const exemplo = proximo || { id: 'exemplo', nome: 'Clínica Exemplo', cidade: 'Campinas', uf: 'SP', bairro: 'Centro', categoria: 'Dentista', nicho: 'dentista', telefone: '(19) 99999-0000', whatsapp: '5519999990000' };
@@ -918,6 +1026,10 @@ function prepararDisparo() {
     salvarModeloAtual();
     const proximo = fila.obter().find((x) => x.estado === 'pendente');
     if (!proximo) return;
+    if ($('#d-texto').value.includes('{link_previa}') && !previaDe(proximo)) {
+      aviso(`A ${proximo.nome} ainda não tem prévia personalizada. Gere o prompt no CRM, use outro modelo ou clique em Pular.`, 'erro');
+      return;
+    }
     const texto = preencherModelo($('#d-texto').value, proximo, extrasMensagem(proximo));
     abrirExterno(linkWhatsApp(proximo.whatsapp, texto));
     marcarItem('enviado');

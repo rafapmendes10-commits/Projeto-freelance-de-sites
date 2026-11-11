@@ -239,3 +239,13 @@
 .selo-roxo { background: color-mix(in srgb, #7c3aed 16%, var(--superficie)); color: #7c3aed; }
 .aviso-marca { margin: 0; padding: 10px 12px; border-radius: var(--raio-p); background: var(--alerta-suave); color: var(--alerta); font-size: 13.5px; }
 @media (max-width: 1180px) { .kpis-crm { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* Diagnóstico e prévia personalizada */
+.motivo { font-size: 12px; color: var(--texto-3); margin-top: 4px; max-width: 200px; line-height: 1.35; }
+.bloco-diagnostico { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: var(--raio); background: var(--marca-suave); }
+.bloco-diagnostico ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--texto-2); }
+.bloco-diagnostico .ajuda { margin: 0; }
+.bloco-venda.pronta { border: 1px solid var(--marca); background: color-mix(in srgb, var(--marca) 7%, var(--superficie)); }
+.bloco-venda .linha > #m-link-previa { max-width: none; }
+.detalhes-dados summary { cursor: pointer; font-weight: 600; color: var(--texto-2); padding: 4px 0 10px; }
+.sem-previa { color: var(--alerta); font-weight: 600; }

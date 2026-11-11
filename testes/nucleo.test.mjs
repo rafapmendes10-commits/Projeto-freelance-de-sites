@@ -75,29 +75,47 @@ test('enriquecimento: extrai e-mail, Instagram e WhatsApp do HTML', () => {
   assert.equal(c.whatsapp, '5519987654321');
 });
 
-import { codificar, decodificar, dadosDaPrevia, linkDaPrevia, documentoCompleto, briefingDoSite, temaDoLead, linkLovable } from '../assets/js/modelo-site.js';
+import { enriquecerOportunidades, promptDaPrevia, promptEmLote, promptSiteFinal, caminhoPrevia, demandasDoNicho } from '../assets/js/oportunidade.js';
+import { auditarSite } from '../scripts/extrair-leads.mjs';
+import { caracteristicasDasEtiquetas } from '../assets/js/fontes/osm.js';
 
-test('prévia: link codifica e decodifica os dados com acentos', () => {
-  const lead = { nome: 'Clínica Sorriso & Cia', categoria: 'Dentista', nicho: 'Dentistas e clínicas odontológicas', telefone: '(19) 99876-5432', whatsapp: '5519998765432', cidade: 'Campinas', uf: 'SP', bairro: 'Cambuí', lat: -22.89, lon: -47.05 };
-  const link = linkDaPrevia(lead, 'https://exemplo.github.io/repo/app.html', { nome: 'Studio Web', whatsapp: '5519911112222' });
-  assert.match(link, /^https:\/\/exemplo\.github\.io\/repo\/previa\.html#d=[\w-]+$/);
-  const d = decodificar(link.split('#d=')[1]);
-  assert.equal(d.n, 'Clínica Sorriso & Cia');
-  assert.equal(d.ni, 'dentista');
-  assert.equal(d.an, 'Studio Web');
-  assert.deepEqual(decodificar(codificar({ a: 'ção' })), { a: 'ção' });
+const base = { categoria: 'Dentista', nicho: 'Dentistas e clínicas odontológicas', cidade: 'Campinas', uf: 'SP', bairro: 'Cambuí' };
+const leadsExemplo = () => [
+  { ...base, id: 'a', nome: 'Clínica Sorriso Pleno', whatsapp: '5519998765432', telefone: '(19) 99876-5432', lat: -22.8935, lon: -47.0512, caracteristicas: ['Abre aos sábados', 'Aceita Pix'], pontuacao: 60 },
+  { ...base, id: 'b', nome: 'Odonto Vida', site: 'https://odontovida.com.br', lat: -22.894, lon: -47.052, pontuacao: 40 },
+  { ...base, id: 'c', nome: 'Dental Prime', site: 'https://dentalprime.com.br', lat: -22.896, lon: -47.05, pontuacao: 40 },
+  { ...base, id: 'd', nome: 'Longe Odonto', lat: -22.99, lon: -47.2, pontuacao: 20 },
+];
+
+test('diagnóstico: concorrência no raio e pontuação de oportunidade', () => {
+  const [a, b, , d] = enriquecerOportunidades(leadsExemplo());
+  assert.equal(a.concorrencia.total, 2);
+  assert.equal(a.concorrencia.comSite, 2);
+  assert.ok(a.oportunidade >= 80, `oportunidade ${a.oportunidade}`);
+  assert.ok(a.motivos.some((m) => /2 de 2 concorrentes/.test(m)));
+  assert.ok(b.oportunidade < a.oportunidade);
+  assert.equal(d.concorrencia.total, 0);
+  assert.equal(caminhoPrevia(a), 'previas/clinica-sorriso-pleno-cambui/');
 });
 
-test('site pronto: HTML completo, seguro e com conteúdo do nicho', () => {
-  const d = dadosDaPrevia({ nome: 'Odonto <Vida>', categoria: 'Dentista', nicho: 'dentista', telefone: '(19) 3232-1010', cidade: 'Campinas', uf: 'SP', horario: 'Mo-Fr 08:00-18:00' });
-  const html = documentoCompleto(d);
-  assert.match(html, /^<!doctype html>/);
-  assert.ok(html.includes('Odonto &lt;Vida&gt;'));
-  assert.ok(!html.includes('<Vida>'));
-  assert.ok(html.includes('Seu sorriso merece o melhor cuidado'));
-  assert.ok(html.includes('Seg a Sex 08:00-18:00'));
-  assert.ok(!html.includes('Prévia gratuita'));
-  assert.equal(temaDoLead({ c: 'Academia' }).cta, 'Agendar aula experimental');
-  assert.match(briefingDoSite(d, { observacoes: 'destacar implantes' }), /destacar implantes/);
-  assert.match(linkLovable(d), /^https:\/\/lovable\.dev\/#prompt=/);
+test('prompt individual traz dados, contexto, demandas, pesquisa e entrega', () => {
+  const [a] = enriquecerOportunidades(leadsExemplo());
+  const p = promptDaPrevia(a, { baseSite: 'https://x.github.io/repo/', agenciaNome: 'Studio Web', agenciaWhatsapp: '5519911112222' });
+  for (const trecho of ['# Prévia personalizada: Clínica Sorriso Pleno', 'previas/clinica-sorriso-pleno-cambui/index.html',
+    'https://x.github.io/repo/previas/clinica-sorriso-pleno-cambui/', 'Odonto Vida', 'Abre aos sábados', 'CFO', '"Clínica Sorriso Pleno" instagram',
+    'Prévia gratuita criada por Studio Web', 'https://wa.me/5519911112222', 'verificar-previa.mjs']) {
+    assert.ok(p.includes(trecho), `faltou: ${trecho}`);
+  }
+  assert.match(promptEmLote([a, a]), /Lote de 2 prévias/);
+  assert.match(promptSiteFinal({ ...a, notas: 'destacar implantes', valor: '1.500' }), /sites\/clinica-sorriso-pleno-cambui\/index\.html[\s\S]*destacar implantes/);
+  assert.ok(demandasDoNicho({ categoria: 'Advocacia' }).cuidados.includes('OAB'));
+});
+
+test('características do OSM e auditoria do site atual', () => {
+  assert.deepEqual(caracteristicasDasEtiquetas({ delivery: 'yes', 'payment:pix': 'yes' }), ['Faz entregas (delivery)', 'Aceita Pix']);
+  const a = auditarSite('<html><footer>© 2018 Empresa</footer></html>', 'http://empresa.com.br');
+  assert.ok(a.problemas.includes('sem HTTPS (navegador mostra "não seguro")'));
+  assert.ok(a.problemas.includes('não é adaptado para celular'));
+  assert.ok(a.problemas.some((x) => x.includes('2018')));
+  assert.equal(auditarSite('<meta name="viewport" content="x"><a href="https://wa.me/55">z</a> © 2026', 'https://ok.com').problemas.length, 0);
 });

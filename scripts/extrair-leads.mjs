@@ -13,13 +13,13 @@ import { fileURLToPath } from 'node:url';
 import { buscarLeadsOsm, deduplicar } from '../assets/js/fontes/osm.js';
 import { buscarLeadsGoogleRest } from '../assets/js/fontes/google.js';
 import { gerarCsv } from '../assets/js/exportar.js';
-import { linkDaPrevia } from '../assets/js/modelo-site.js';
+import { enriquecerOportunidades, promptEmLote } from '../assets/js/oportunidade.js';
 import { slug, interpretarTelefones, pontuarLead, urlInstagram, esperar } from '../assets/js/util.js';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USER_AGENT = 'RadarLeads/1.0 (extrator de leads de codigo aberto)';
 
-/** Endereço público do site, usado para montar o link da prévia de cada empresa. */
+/** Endereço público do site, usado para indicar onde cada prévia personalizada será publicada. */
 function baseDasPrevias() {
   if (process.env.PREVIA_BASE_URL) return process.env.PREVIA_BASE_URL.replace(/\/?$/, '/');
   const repo = process.env.GITHUB_REPOSITORY;
@@ -70,14 +70,27 @@ async function baixarPagina(url, ms = 10000) {
   const t = setTimeout(() => controle.abort(), ms);
   try {
     const r = await fetch(url, { headers: { 'User-Agent': USER_AGENT, Accept: 'text/html' }, redirect: 'follow', signal: controle.signal });
-    if (!r.ok || !/text\/html|application\/xhtml/i.test(r.headers.get('content-type') || 'text/html')) return '';
+    if (!r.ok || !/text\/html|application\/xhtml/i.test(r.headers.get('content-type') || 'text/html')) return { html: '', url: r.url };
     const texto = await r.text();
-    return texto.slice(0, 1_500_000);
+    return { html: texto.slice(0, 1_500_000), url: r.url };
   } catch {
-    return '';
+    return { html: '', url: '' };
   } finally {
     clearTimeout(t);
   }
+}
+
+/** Avalia o site atual do comércio e lista problemas que justificam um site novo. */
+export function auditarSite(html, urlFinal = '') {
+  const problemas = [];
+  if (urlFinal && urlFinal.startsWith('http:')) problemas.push('sem HTTPS (navegador mostra "não seguro")');
+  if (!/<meta[^>]+name=["']viewport/i.test(html)) problemas.push('não é adaptado para celular');
+  const anos = [...html.matchAll(/(?:©|&copy;|copyright)\s*(?:\d{4}\s*[-–]\s*)?(\d{4})/gi)].map((m) => Number(m[1]));
+  const ano = anos.length ? Math.max(...anos) : null;
+  if (ano && ano < new Date().getFullYear() - 2) problemas.push(`parece desatualizado (rodapé de ${ano})`);
+  if (!/wa\.me|api\.whatsapp\.com|whatsapp/i.test(html)) problemas.push('sem botão de WhatsApp');
+  if (/wix\.com|wixsite|webnode|site123|negocio\.site|business\.site/i.test(html + urlFinal)) problemas.push('feito em construtor gratuito');
+  return { problemas, ano };
 }
 
 export function extrairContatosDoHtml(html) {
@@ -102,8 +115,10 @@ async function enriquecer(leads, concorrencia = 6) {
   async function trabalhador() {
     while (fila.length) {
       const l = fila.shift();
-      const html = await baixarPagina(l.site);
+      const { html, url } = await baixarPagina(l.site);
+      if (!html) l.auditoriaSite = { problemas: ['site fora do ar ou inacessível'] };
       if (html) {
+        l.auditoriaSite = auditarSite(html, url);
         const c = extrairContatosDoHtml(html);
         if (!l.email && c.email) l.email = c.email;
         if (!l.instagram && c.instagram) l.instagram = c.instagram;
@@ -142,18 +157,14 @@ async function executarBusca(busca, opcoesGerais) {
   }
   leads = deduplicar(leads);
   if (busca.enriquecer ?? opcoesGerais.enriquecer) await enriquecer(leads);
-  leads.sort((a, b) => b.pontuacao - a.pontuacao);
-  const base = baseDasPrevias();
-  if (base) {
-    const agencia = { nome: process.env.AGENCIA_NOME || '', whatsapp: (process.env.AGENCIA_WHATSAPP || '').replace(/\D/g, '') };
-    for (const l of leads) l.linkPrevia = linkDaPrevia(l, base, agencia);
-  }
+  enriquecerOportunidades(leads);
+  leads.sort((a, b) => (b.oportunidade || 0) - (a.oportunidade || 0) || b.pontuacao - a.pontuacao);
   return leads;
 }
 
 function resumo(leads) {
   const n = (fn) => leads.filter(fn).length;
-  return `${leads.length} leads | telefone: ${n((l) => l.telefone)} | WhatsApp: ${n((l) => l.whatsapp)} | e-mail: ${n((l) => l.email)} | site: ${n((l) => l.site)} | sem site: ${n((l) => !l.site)}`;
+  return `${leads.length} leads | oportunidade alta (70+): ${n((l) => l.oportunidade >= 70)} | telefone: ${n((l) => l.telefone)} | WhatsApp: ${n((l) => l.whatsapp)} | e-mail: ${n((l) => l.email)} | site: ${n((l) => l.site)} | sem site: ${n((l) => !l.site)}`;
 }
 
 async function principal() {
@@ -182,6 +193,15 @@ async function principal() {
       const base = `leads-${slug(busca.nicho)}-${slug(busca.local)}`;
       await writeFile(path.join(pasta, `${base}.csv`), gerarCsv(leads));
       await writeFile(path.join(pasta, `${base}.json`), JSON.stringify(leads, null, 2));
+      const melhores = leads.filter((l) => l.whatsapp || l.telefone).slice(0, 10);
+      if (melhores.length) {
+        const configPrompt = {
+          baseSite: baseDasPrevias(),
+          agenciaNome: process.env.AGENCIA_NOME || '',
+          agenciaWhatsapp: (process.env.AGENCIA_WHATSAPP || '').replace(/\D/g, ''),
+        };
+        await writeFile(path.join(pasta, `prompts-${base}.md`), promptEmLote(melhores, configPrompt));
+      }
       console.log(`  ${resumo(leads)}`);
       console.log(`  Arquivos: ${path.relative(RAIZ, path.join(pasta, base))}.csv / .json`);
       relatorio.push({ ...busca, arquivo: `${base}.csv`, total: leads.length, ok: true });

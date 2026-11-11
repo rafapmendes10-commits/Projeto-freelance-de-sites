@@ -140,6 +140,46 @@ export async function executarOverpass(consulta, opcoes = {}) {
   throw ultimoErro || new Error('Não foi possível consultar o mapa agora.');
 }
 
+const SIM = (v) => v && v !== 'no';
+const COZINHAS = {
+  pizza: 'pizza', burger: 'hambúrguer', japanese: 'culinária japonesa', sushi: 'sushi', italian: 'culinária italiana',
+  brazilian: 'culinária brasileira', regional: 'culinária regional', barbecue: 'churrasco', steak_house: 'churrascaria',
+  chinese: 'culinária chinesa', arab: 'culinária árabe', mexican: 'culinária mexicana', coffee_shop: 'cafés especiais',
+  ice_cream: 'sorvetes', acai: 'açaí', vegetarian: 'vegetariana', vegan: 'vegana', seafood: 'frutos do mar',
+  sandwich: 'lanches', chicken: 'frango', cake: 'bolos', bakery: 'padaria', juice: 'sucos', breakfast: 'café da manhã',
+};
+
+/** Traduz etiquetas do OSM em características concretas do estabelecimento (usadas no diagnóstico e no prompt). */
+export function caracteristicasDasEtiquetas(t = {}) {
+  const c = [];
+  if (t.cuisine) c.push(`Especialidade: ${t.cuisine.split(';').map((x) => COZINHAS[x.trim()] || x.trim().replace(/_/g, ' ')).join(', ')}`);
+  for (const k of ['healthcare:speciality', 'speciality', 'beauty', 'sport']) if (t[k]) c.push(`Especialidade: ${t[k].replace(/;/g, ', ').replace(/_/g, ' ')}`);
+  if (SIM(t.delivery)) c.push('Faz entregas (delivery)');
+  if (SIM(t.takeaway)) c.push('Pedidos para viagem');
+  if (SIM(t.outdoor_seating)) c.push('Mesas ao ar livre');
+  if (SIM(t.reservation)) c.push('Aceita reservas');
+  if (t.wheelchair === 'yes') c.push('Acessível para cadeirantes');
+  if (t.wheelchair === 'limited') c.push('Acessibilidade parcial');
+  if (SIM(t.air_conditioning)) c.push('Ambiente climatizado');
+  if (t.internet_access && t.internet_access !== 'no') c.push('Wi-Fi para clientes');
+  if (t.parking || SIM(t['parking:customers'])) c.push('Estacionamento');
+  if (SIM(t.drive_through)) c.push('Drive-thru');
+  if (SIM(t['diet:vegan']) || SIM(t['diet:vegetarian'])) c.push('Opções vegetarianas ou veganas');
+  if (SIM(t['diet:gluten_free'])) c.push('Opções sem glúten');
+  if (SIM(t['payment:pix'])) c.push('Aceita Pix');
+  if (SIM(t['payment:credit_cards']) || SIM(t['payment:debit_cards'])) c.push('Aceita cartões');
+  if (SIM(t.self_service)) c.push('Autoatendimento');
+  if (t.opening_hours === '24/7') c.push('Funciona 24 horas');
+  else if (/Su\b|Sa-Su|Mo-Su/.test(t.opening_hours || '') && !/Su off/.test(t.opening_hours || '')) c.push('Abre aos domingos');
+  else if (/Sa\b|Mo-Sa/.test(t.opening_hours || '') && !/Sa off/.test(t.opening_hours || '')) c.push('Abre aos sábados');
+  if (t.start_date && /^\d{4}/.test(t.start_date)) c.push(`Em atividade desde ${t.start_date.slice(0, 4)}`);
+  if (t.brand && t.brand !== t.name) c.push(`Marca: ${t.brand}`);
+  if (t.operator && t.operator !== t.name) c.push(`Operado por: ${t.operator}`);
+  if (t.level && t.level !== '0') c.push(`Fica no ${t.level}º andar`);
+  if (t['building:levels']) c.push(`Prédio de ${t['building:levels']} andares`);
+  return [...new Set(c)];
+}
+
 /** Converte um elemento OSM em um lead padronizado. */
 export function normalizarElementoOsm(el, contexto = {}) {
   const t = el.tags || {};
@@ -184,6 +224,8 @@ export function normalizarElementoOsm(el, contexto = {}) {
     uf,
     cep,
     horario: t.opening_hours || '',
+    caracteristicas: caracteristicasDasEtiquetas(t),
+    descricao: t.description || t['description:pt'] || '',
     avaliacao: null,
     numAvaliacoes: null,
     lat,
