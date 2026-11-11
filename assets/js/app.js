@@ -4,6 +4,7 @@ import { NICHOS, encontrarNicho } from './nichos.js';
 import { buscarLeadsOsm, deduplicar } from './fontes/osm.js';
 import { buscarLeadsGoogleNavegador } from './fontes/google.js';
 import { baixarCsv, baixarExcel, baixarJson, COLUNAS } from './exportar.js';
+import { linkDaPrevia, dadosDaPrevia, documentoCompleto, linkLovable, briefingDoSite } from './modelo-site.js';
 import { crm, config, historico, fila, sessao, ETAPAS, backupCompleto, restaurarBackup, apagarTudo } from './armazenamento.js';
 import {
   escaparHtml as h, slug, preencherModelo, linkWhatsApp, formatarData, interpretarTelefones,
@@ -44,7 +45,7 @@ const FILTROS = [
   { id: 'naosalvos', rotulo: 'Ainda não salvos', teste: (l) => !crm.tem(l.id) },
 ];
 
-const CORES_ETAPA = { novo: '#64748b', contatado: '#2563eb', negociando: '#d97706', ganho: '#0d9f6e', perdido: '#dc2626' };
+const CORES_ETAPA = { novo: '#64748b', contatado: '#2563eb', negociando: '#d97706', pago: '#7c3aed', ganho: '#0d9f6e', perdido: '#dc2626' };
 
 // ---------------------------------------------------------------- utilidades de interface
 
@@ -52,7 +53,13 @@ function aviso(mensagem, tipo = 'ok') {
   const el = document.createElement('div');
   el.className = `aviso-flutuante ${tipo === 'erro' ? 'erro' : ''}`;
   el.innerHTML = `${ico(tipo === 'erro' ? 'x' : 'check')}<span>${h(mensagem)}</span>`;
-  $('#avisos').appendChild(el);
+  // Com a janela do lead aberta, o aviso precisa ficar dentro dela para aparecer por cima
+  const dialogo = document.querySelector('dialog[open]');
+  let destino = $('#avisos');
+  if (dialogo) {
+    destino = dialogo.querySelector('.avisos') || dialogo.appendChild(Object.assign(document.createElement('div'), { className: 'avisos' }));
+  }
+  destino.appendChild(el);
   setTimeout(() => el.remove(), tipo === 'erro' ? 6000 : 3200);
 }
 
@@ -66,8 +73,52 @@ function modeloAtivo() {
   return c.modelos.find((m) => m.id === c.modeloAtivo) || c.modelos[0] || { texto: '' };
 }
 
+function baseDoSite() {
+  const c = config.obter();
+  if (c.siteBase) return c.siteBase.endsWith('/') ? c.siteBase : `${c.siteBase}/`;
+  return location.href.split('#')[0].split('?')[0];
+}
+
+function previaDe(lead) {
+  const c = config.obter();
+  return linkDaPrevia(lead, baseDoSite(), { nome: c.agenciaNome, whatsapp: c.agenciaWhatsapp });
+}
+
+function extrasMensagem(lead) {
+  const c = config.obter();
+  return {
+    nicho: (lead.nicho || lead.categoria || '').toLowerCase(),
+    link_previa: previaDe(lead),
+    minha_marca: c.agenciaNome || 'especialista em criação de sites',
+  };
+}
+
 function mensagemPara(lead) {
-  return preencherModelo(modeloAtivo().texto, lead, { nicho: (lead.nicho || lead.categoria || '').toLowerCase() });
+  return preencherModelo(modeloAtivo().texto, lead, extrasMensagem(lead));
+}
+
+function comPrevia(leads) {
+  return leads.map((l) => ({ ...l, linkPrevia: previaDe(l) }));
+}
+
+function baixarArquivo(conteudo, nome, tipo) {
+  const url = URL.createObjectURL(new Blob([conteudo], { type: tipo }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
+
+async function copiarTexto(texto, mensagem) {
+  try {
+    await navigator.clipboard.writeText(texto);
+    aviso(mensagem);
+  } catch {
+    window.prompt('Copie o texto abaixo:', texto);
+  }
 }
 
 function abrirWhatsApp(lead) {
@@ -323,7 +374,8 @@ function renderizarTabela() {
         <td class="c-local"><div class="local">${h(l.endereco || [l.bairro, l.cidade].filter(Boolean).join(', ') || 'Endereço não informado')}</div></td>
         <td class="c-qual"><div class="qualidade" title="Pontuação de completude do cadastro"><div class="trilho"><span style="width:${l.pontuacao}%"></span></div><b>${l.pontuacao}</b></div></td>
         <td class="c-acoes col-acoes"><div class="acoes-linha">
-          <button type="button" class="btn btn-zap" data-acao="zap" title="Abrir WhatsApp" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}</button>
+          <button type="button" class="btn btn-zap" data-acao="zap" title="Enviar prévia pelo WhatsApp" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}</button>
+          <button type="button" class="btn" data-acao="previa" title="Ver prévia gratuita do site">${ico('varinha')}</button>
           <a class="btn" href="${h(l.linkMaps)}" target="_blank" rel="noopener" title="Ver no Google Maps">${ico('pino')}</a>
           <button type="button" class="btn ${salvo ? 'salvo' : ''}" data-acao="salvar" title="${salvo ? 'Já está no CRM' : 'Salvar no CRM'}">${ico(salvo ? 'check' : 'mais')}</button>
         </div></td>
@@ -378,7 +430,8 @@ function adicionarNaFila(leads) {
   const ids = new Set(atual.map((i) => i.id));
   const comZap = leads.filter((l) => l.whatsapp);
   const novos = comZap.filter((l) => !ids.has(l.id)).map((l) => ({
-    id: l.id, nome: l.nome, whatsapp: l.whatsapp, telefone: l.telefone, cidade: l.cidade, bairro: l.bairro,
+    id: l.id, nome: l.nome, whatsapp: l.whatsapp, telefone: l.telefone, telefones: l.telefones, cidade: l.cidade, uf: l.uf,
+    bairro: l.bairro, endereco: l.endereco, horario: l.horario, email: l.email, instagram: l.instagram, lat: l.lat, lon: l.lon,
     categoria: l.categoria, nicho: l.nicho, site: l.site, estado: 'pendente',
   }));
   fila.definir(atual.concat(novos));
@@ -445,6 +498,7 @@ function prepararResultados() {
       renderizarTabela();
     } else if (acao === 'detalhe') abrirDetalhe(lead);
     else if (acao === 'zap') abrirWhatsApp(lead);
+    else if (acao === 'previa') abrirExterno(previaDe(lead));
     else if (acao === 'salvar') salvarNoCrm([lead]);
   });
 
@@ -473,8 +527,8 @@ function prepararResultados() {
   $('#acao-salvar').addEventListener('click', () => salvarNoCrm(alvoDasAcoes()));
   $('#acao-fila').addEventListener('click', () => adicionarNaFila(alvoDasAcoes()));
   $('#acao-copiar').addEventListener('click', () => copiarTelefones(alvoDasAcoes()));
-  $('#acao-csv').addEventListener('click', () => { const a = alvoDasAcoes(); if (a.length) { baixarCsv(a, nomeArquivo()); aviso(`${fmt(a.length)} leads exportados em CSV.`); } });
-  $('#acao-excel').addEventListener('click', () => { const a = alvoDasAcoes(); if (a.length) { baixarExcel(a, nomeArquivo()); aviso(`${fmt(a.length)} leads exportados para Excel.`); } });
+  $('#acao-csv').addEventListener('click', () => { const a = comPrevia(alvoDasAcoes()); if (a.length) { baixarCsv(a, nomeArquivo()); aviso(`${fmt(a.length)} leads exportados em CSV.`); } });
+  $('#acao-excel').addEventListener('click', () => { const a = comPrevia(alvoDasAcoes()); if (a.length) { baixarExcel(a, nomeArquivo()); aviso(`${fmt(a.length)} leads exportados para Excel.`); } });
 }
 
 // ---------------------------------------------------------------- mapa
@@ -536,25 +590,30 @@ function abrirDetalhe(leadBase) {
       <button class="btn btn-icone btn-fantasma" type="button" data-fechar aria-label="Fechar">${ico('x')}</button>
     </div>
     <div class="acoes">
-      <button class="btn btn-zap" type="button" data-m="zap" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}WhatsApp</button>
+      <button class="btn btn-zap" type="button" data-m="zap" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}Enviar prévia</button>
+      <a class="btn" href="${h(previaDe(l))}" target="_blank" rel="noopener">${ico('varinha')}Ver prévia do site</a>
+      <button class="btn" type="button" data-m="copiar-previa">${ico('copiar')}Copiar link</button>
       ${l.telefone ? `<a class="btn" href="tel:+55${h(l.telefone.replace(/\D/g, ''))}">${ico('telefone')}Ligar</a>` : ''}
-      <a class="btn" href="${h(l.linkMaps)}" target="_blank" rel="noopener">${ico('pino')}Google Maps</a>
+      <a class="btn" href="${h(l.linkMaps)}" target="_blank" rel="noopener">${ico('pino')}Maps</a>
       ${salvo ? `<button class="btn btn-perigo" type="button" data-m="remover">${ico('lixo')}Remover do CRM</button>` : `<button class="btn btn-primario" type="button" data-m="salvar">${ico('mais')}Salvar no CRM</button>`}
     </div>
+    ${blocoVenda(salvo)}
     <dl class="dados">${linhas.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>
     ${salvo ? `
       <div class="campo"><label for="m-etapa">Etapa no funil</label>
         <select class="entrada" id="m-etapa">${ETAPAS.map((e) => `<option value="${e.id}" ${e.id === salvo.etapa ? 'selected' : ''}>${e.rotulo}</option>`).join('')}</select></div>
-      <div class="campo"><label for="m-notas">Anotações</label>
-        <textarea class="entrada" id="m-notas" placeholder="Ex.: falei com a Ana, pediu proposta até sexta.">${h(salvo.notas || '')}</textarea></div>
+      <div class="campo"><label for="m-notas">Anotações (também vão para o briefing do site)</label>
+        <textarea class="entrada" id="m-notas" placeholder="Ex.: falei com a Ana, quer destacar implantes e aparelho ortodôntico.">${h(salvo.notas || '')}</textarea></div>
       ${salvo.historico?.length ? `<div><span class="rotulo">Movimentações</span><ul class="linha-tempo">${salvo.historico.slice(-6).reverse().map((x) => `<li>${formatarData(x.em)}: ${h(rotuloEtapa(x.de))} para ${h(rotuloEtapa(x.para))}</li>`).join('')}</ul></div>` : ''}
       <div class="linha"><button class="btn btn-primario" type="button" data-m="gravar">Salvar alterações</button></div>` : ''}
   `;
   const dialogo = $('#modal-lead');
+  const notasAtuais = () => $('#m-notas')?.value ?? salvo?.notas ?? '';
   conteudo.onclick = (e) => {
     if (e.target.closest('[data-fechar]')) return dialogo.close();
     const m = e.target.closest('[data-m]')?.dataset.m;
     if (m === 'zap') abrirWhatsApp(l);
+    if (m === 'copiar-previa') copiarTexto(previaDe(l), 'Link da prévia copiado.');
     if (m === 'salvar') { crm.salvarVarios([leadBase]); atualizarContadores(); abrirDetalhe(leadBase); renderizarTabela(); aviso('Lead salvo no CRM.'); }
     if (m === 'remover') { crm.remover(l.id); atualizarContadores(); dialogo.close(); renderizarTabela(); renderizarCrmSeVisivel(); aviso('Lead removido do CRM.'); }
     if (m === 'gravar') {
@@ -563,8 +622,61 @@ function abrirDetalhe(leadBase) {
       renderizarCrmSeVisivel();
       aviso('Alterações salvas.');
     }
+    if (m === 'pago') {
+      const valor = $('#m-valor')?.value.trim() || '';
+      const atualizado = crm.atualizar(l.id, { etapa: 'pago', pagoEm: new Date().toISOString(), valor, notas: notasAtuais() });
+      baixarSitePronto(atualizado);
+      aviso('Pagamento registrado. O site pronto foi baixado e as opções de produção estão abertas.');
+      renderizarCrmSeVisivel();
+      abrirDetalhe(atualizado);
+    }
+    if (m === 'baixar-site') baixarSitePronto({ ...l, notas: notasAtuais() });
+    if (m === 'briefing') copiarTexto(briefingDoSite(dadosDaPrevia(l), { observacoes: notasAtuais() }), 'Briefing copiado. Cole na conversa com o Claude ou em outra ferramenta.');
+    if (m === 'entregue') {
+      const atualizado = crm.atualizar(l.id, { etapa: 'ganho', entregueEm: new Date().toISOString(), notas: notasAtuais() });
+      aviso('Site marcado como entregue.');
+      renderizarCrmSeVisivel();
+      abrirDetalhe(atualizado);
+    }
   };
   if (!dialogo.open) dialogo.showModal();
+}
+
+function baixarSitePronto(lead) {
+  const html = documentoCompleto(dadosDaPrevia(lead));
+  baixarArquivo(html, `site-${slug(lead.nome)}.html`, 'text/html;charset=utf-8');
+}
+
+function blocoVenda(salvo) {
+  if (!salvo) {
+    return `<div class="bloco-venda"><strong>Venda e produção do site</strong>
+      <p class="ajuda">Salve este lead no CRM para registrar o pagamento e liberar a produção do site.</p></div>`;
+  }
+  const pago = salvo.etapa === 'pago' || salvo.etapa === 'ganho';
+  if (!pago) {
+    return `<div class="bloco-venda">
+      <strong>Venda e produção do site</strong>
+      <p class="ajuda">Quando o cliente pagar o sinal, registre aqui. O site pronto é gerado na hora.</p>
+      <div class="linha">
+        <input class="entrada" id="m-valor" inputmode="decimal" placeholder="Valor combinado, ex.: 1.200" value="${h(salvo.valor || '')}">
+        <button class="btn btn-primario" type="button" data-m="pago">${ico('check')}Pagamento prévio realizado</button>
+      </div>
+    </div>`;
+  }
+  const d = dadosDaPrevia(salvo);
+  return `<div class="bloco-venda pago">
+    <div class="linha entre"><strong>${salvo.etapa === 'ganho' ? 'Site entregue' : 'Pagamento recebido: produzir o site'}</strong>
+      <span class="selo selo-roxo">Pago em ${formatarData(salvo.pagoEm)}${salvo.valor ? ` · R$ ${h(salvo.valor)}` : ''}</span></div>
+    <div class="acoes">
+      <button class="btn btn-primario" type="button" data-m="baixar-site">${ico('baixar')}Baixar site pronto</button>
+      <a class="btn" href="${h(linkLovable(d, { observacoes: salvo.notas }))}" target="_blank" rel="noopener">${ico('varinha')}Criar versão completa no Lovable</a>
+      <button class="btn" type="button" data-m="briefing">${ico('copiar')}Copiar briefing para o Claude</button>
+      ${salvo.etapa === 'pago' ? `<button class="btn" type="button" data-m="entregue">${ico('check')}Marcar como entregue</button>` : ''}
+    </div>
+    <p class="ajuda"><strong>Site pronto:</strong> arquivo único, com SEO local, mapa e WhatsApp; renomeie para <em>index.html</em> e publique na Cloudflare Pages ou Netlify.
+      <strong>Lovable:</strong> abre com o briefing preenchido; a construção começa quando você clicar em enviar.
+      <strong>Claude:</strong> cole o briefing aqui na conversa e eu crio uma versão personalizada.</p>
+  </div>`;
 }
 
 function formatarZap(n) {
@@ -618,7 +730,8 @@ function renderizarCrm() {
               <span class="ajuda">${h(l.telefone || 'Sem telefone')}</span>
               <span class="acoes-linha">
                 <button class="btn btn-zap" type="button" data-c="zap" title="WhatsApp" ${l.whatsapp ? '' : 'disabled'}>${ico('zap')}</button>
-                <button class="btn" type="button" data-c="detalhe" title="Abrir">${ico('externo')}</button>
+                <button class="btn" type="button" data-c="previa" title="Ver prévia do site">${ico('varinha')}</button>
+                <button class="btn" type="button" data-c="detalhe" title="${l.etapa === 'pago' ? 'Produzir site' : 'Abrir e registrar pagamento'}">${ico(l.etapa === 'pago' ? 'baixar' : 'externo')}</button>
               </span>
             </div>
           </article>`).join('')}
@@ -650,8 +763,8 @@ function prepararCrm() {
     renderizarCrm();
   }));
   const nomeCrm = () => `meus-leads-${new Date().toISOString().slice(0, 10)}`;
-  $('#crm-csv').addEventListener('click', () => { const l = leadsCrmFiltrados(); if (l.length) baixarCsv(l, nomeCrm()); });
-  $('#crm-excel').addEventListener('click', () => { const l = leadsCrmFiltrados(); if (l.length) baixarExcel(l, nomeCrm()); });
+  $('#crm-csv').addEventListener('click', () => { const l = comPrevia(leadsCrmFiltrados()); if (l.length) baixarCsv(l, nomeCrm()); });
+  $('#crm-excel').addEventListener('click', () => { const l = comPrevia(leadsCrmFiltrados()); if (l.length) baixarExcel(l, nomeCrm()); });
   $('#crm-fila').addEventListener('click', () => adicionarNaFila(leadsCrmFiltrados()));
 
   const vista = $('#vista-leads');
@@ -663,6 +776,7 @@ function prepararCrm() {
     if (!l) return;
     if (alvo.dataset.c === 'zap') abrirWhatsApp(l);
     if (alvo.dataset.c === 'detalhe') abrirDetalhe(l);
+    if (alvo.dataset.c === 'previa') abrirExterno(previaDe(l));
     if (alvo.dataset.c === 'remover' && confirm(`Remover ${l.nome} do CRM?`)) { crm.remover(id); atualizarContadores(); renderizarCrm(); }
   });
   vista.addEventListener('change', (e) => {
@@ -697,7 +811,7 @@ function prepararCrm() {
 
 // ---------------------------------------------------------------- disparo
 
-const VARIAVEIS = ['nome', 'primeiro_nome', 'cidade', 'bairro', 'categoria', 'nicho'];
+const VARIAVEIS = ['link_previa', 'nome', 'minha_marca', 'cidade', 'bairro', 'categoria', 'nicho'];
 
 function renderizarDisparo() {
   const c = config.obter();
@@ -728,7 +842,10 @@ function renderizarFila() {
       <div><div class="nome">${h(i.nome)}</div><div class="tel">${h(i.telefone || i.whatsapp)}</div></div>
       <span class="selo ${i.estado === 'enviado' ? 'selo-marca' : i.estado === 'pulado' ? '' : 'selo-acento'}">${i.estado === 'enviado' ? 'Enviado' : i.estado === 'pulado' ? 'Pulado' : 'Pendente'}</span>
     </li>`).join('');
-  $('#d-previa').textContent = preencherModelo($('#d-texto').value, proximo || { nome: 'Clínica Exemplo', cidade: 'Campinas', bairro: 'Centro', categoria: 'Dentista' }, { nicho: (proximo?.nicho || proximo?.categoria || 'dentistas').toLowerCase() });
+  const exemplo = proximo || { id: 'exemplo', nome: 'Clínica Exemplo', cidade: 'Campinas', uf: 'SP', bairro: 'Centro', categoria: 'Dentista', nicho: 'dentista', telefone: '(19) 99999-0000', whatsapp: '5519999990000' };
+  $('#d-previa').textContent = preencherModelo($('#d-texto').value, exemplo, extrasMensagem(exemplo));
+  const c = config.obter();
+  $('#d-marca').hidden = Boolean(c.agenciaNome && c.agenciaWhatsapp);
   atualizarBotaoDisparo();
   atualizarContadores();
 }
@@ -801,7 +918,7 @@ function prepararDisparo() {
     salvarModeloAtual();
     const proximo = fila.obter().find((x) => x.estado === 'pendente');
     if (!proximo) return;
-    const texto = preencherModelo($('#d-texto').value, proximo, { nicho: (proximo.nicho || proximo.categoria || '').toLowerCase() });
+    const texto = preencherModelo($('#d-texto').value, proximo, extrasMensagem(proximo));
     abrirExterno(linkWhatsApp(proximo.whatsapp, texto));
     marcarItem('enviado');
     if ($('#d-marcar-crm').checked) {
@@ -854,7 +971,11 @@ function prepararHistorico() {
 // ---------------------------------------------------------------- configurações
 
 function renderizarConfig() {
-  $('#c-chave').value = config.obter().chaveGoogle || '';
+  const c = config.obter();
+  $('#c-chave').value = c.chaveGoogle || '';
+  $('#c-agencia-nome').value = c.agenciaNome || '';
+  $('#c-agencia-zap').value = c.agenciaWhatsapp ? formatarZap(c.agenciaWhatsapp) : '';
+  $('#c-site-base').value = c.siteBase || '';
 }
 
 function interpretarCsv(texto) {
@@ -925,6 +1046,17 @@ function importarCsv(texto) {
 }
 
 function prepararConfig() {
+  $('#c-salvar-marca').addEventListener('click', () => {
+    const bruto = $('#c-agencia-zap').value.trim();
+    const tel = interpretarTelefones(bruto)[0];
+    const zap = tel?.whatsapp || (tel?.digitos?.length >= 12 ? tel.digitos : '');
+    if (bruto && !zap) return aviso('Informe um celular com DDD, por exemplo (19) 99999-0000.', 'erro');
+    const base = $('#c-site-base').value.trim();
+    if (base && !/^https?:\/\//.test(base)) return aviso('O endereço do site deve começar com https://', 'erro');
+    config.salvar({ agenciaNome: $('#c-agencia-nome').value.trim(), agenciaWhatsapp: zap, siteBase: base });
+    renderizarConfig();
+    aviso('Marca salva. As próximas prévias já mostram seu nome e WhatsApp.');
+  });
   $('#c-salvar-chave').addEventListener('click', () => {
     config.salvar({ chaveGoogle: $('#c-chave').value.trim() });
     aviso('Chave salva neste navegador.');

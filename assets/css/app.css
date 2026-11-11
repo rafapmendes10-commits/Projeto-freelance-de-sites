@@ -128,8 +128,8 @@
 .atribuicao { font-size: 12px; color: var(--texto-3); margin: 0; }
 
 /* CRM */
-.kpis-crm { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
-.funil { display: grid; grid-template-columns: repeat(5, minmax(205px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
+.kpis-crm { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
+.funil { display: grid; grid-template-columns: repeat(6, minmax(190px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 8px; }
 .coluna { background: var(--superficie-2); border: 1px solid var(--borda); border-radius: var(--raio); padding: 10px; min-height: 280px; display: flex; flex-direction: column; gap: 8px; }
 .coluna.arrastando-sobre { border-color: var(--marca); background: var(--marca-suave); }
 .coluna-topo { display: flex; justify-content: space-between; align-items: center; padding: 2px 4px 6px; font-weight: 700; font-size: 13.5px; }
@@ -217,7 +217,7 @@
   .dados { grid-template-columns: 1fr; gap: 2px; }
   .dados dd { margin-bottom: 8px; }
   #mapa { height: 460px; }
-  .funil { grid-template-columns: repeat(5, 82vw); scroll-snap-type: x mandatory; }
+  .funil { grid-template-columns: repeat(6, 82vw); scroll-snap-type: x mandatory; }
   .coluna { scroll-snap-align: start; }
   .barra-acoes .acoes { width: 100%; }
   .barra-acoes .acoes .btn { flex: 1; }
@@ -230,3 +230,12 @@
   .tabela-responsiva td.c-sel { grid-row: 1; }
   .local { max-width: none; }
 }
+
+/* Venda e produção */
+.bloco-venda { display: flex; flex-direction: column; gap: 10px; padding: 16px; border-radius: var(--raio); border: 1px dashed var(--borda-forte); background: var(--superficie-2); }
+.bloco-venda.pago { border: 1px solid #a78bfa; background: color-mix(in srgb, #7c3aed 8%, var(--superficie)); }
+.bloco-venda .ajuda { margin: 0; }
+.bloco-venda .linha > .entrada { max-width: 260px; }
+.selo-roxo { background: color-mix(in srgb, #7c3aed 16%, var(--superficie)); color: #7c3aed; }
+.aviso-marca { margin: 0; padding: 10px 12px; border-radius: var(--raio-p); background: var(--alerta-suave); color: var(--alerta); font-size: 13.5px; }
+@media (max-width: 1180px) { .kpis-crm { grid-template-columns: repeat(3, minmax(0, 1fr)); } }

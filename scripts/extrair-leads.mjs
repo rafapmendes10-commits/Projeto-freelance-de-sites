@@ -13,10 +13,22 @@ import { fileURLToPath } from 'node:url';
 import { buscarLeadsOsm, deduplicar } from '../assets/js/fontes/osm.js';
 import { buscarLeadsGoogleRest } from '../assets/js/fontes/google.js';
 import { gerarCsv } from '../assets/js/exportar.js';
+import { linkDaPrevia } from '../assets/js/modelo-site.js';
 import { slug, interpretarTelefones, pontuarLead, urlInstagram, esperar } from '../assets/js/util.js';
 
 const RAIZ = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const USER_AGENT = 'RadarLeads/1.0 (extrator de leads de codigo aberto)';
+
+/** Endereço público do site, usado para montar o link da prévia de cada empresa. */
+function baseDasPrevias() {
+  if (process.env.PREVIA_BASE_URL) return process.env.PREVIA_BASE_URL.replace(/\/?$/, '/');
+  const repo = process.env.GITHUB_REPOSITORY;
+  if (repo) {
+    const [dono, nome] = repo.split('/');
+    return `https://${dono.toLowerCase()}.github.io/${nome}/`;
+  }
+  return '';
+}
 
 function lerArgumentos(argv) {
   const args = { enriquecer: false, fonte: 'osm', limite: 1000, saida: 'dados' };
@@ -131,6 +143,11 @@ async function executarBusca(busca, opcoesGerais) {
   leads = deduplicar(leads);
   if (busca.enriquecer ?? opcoesGerais.enriquecer) await enriquecer(leads);
   leads.sort((a, b) => b.pontuacao - a.pontuacao);
+  const base = baseDasPrevias();
+  if (base) {
+    const agencia = { nome: process.env.AGENCIA_NOME || '', whatsapp: (process.env.AGENCIA_WHATSAPP || '').replace(/\D/g, '') };
+    for (const l of leads) l.linkPrevia = linkDaPrevia(l, base, agencia);
+  }
   return leads;
 }
 

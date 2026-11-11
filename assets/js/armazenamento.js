@@ -24,7 +24,8 @@ export const ETAPAS = [
   { id: 'novo', rotulo: 'Novo' },
   { id: 'contatado', rotulo: 'Contatado' },
   { id: 'negociando', rotulo: 'Em negociação' },
-  { id: 'ganho', rotulo: 'Fechado' },
+  { id: 'pago', rotulo: 'Pagamento recebido' },
+  { id: 'ganho', rotulo: 'Site entregue' },
   { id: 'perdido', rotulo: 'Perdido' },
 ];
 
@@ -33,10 +34,22 @@ export const MODELO_PADRAO =
   'Sou especialista em criação de sites e presença digital para {nicho}. ' +
   'Posso mostrar em 2 minutos uma ideia de como atrair mais clientes pelo Google?';
 
+const MODELO_PREVIA = {
+  id: 'previa',
+  nome: 'Prévia gratuita do site',
+  texto: 'Olá, tudo bem? Sou {minha_marca} e criei, sem compromisso, uma prévia de como poderia ficar o site da {nome}:\n\n{link_previa}\n\n' +
+    'Ela já tem botão de WhatsApp, mapa e os dados de vocês. Se gostar, coloco no ar com domínio próprio. Posso te explicar em 2 minutos?',
+};
+
 const CONFIG_PADRAO = {
   chaveGoogle: '',
   fontePadrao: 'osm',
+  agenciaNome: '',
+  agenciaWhatsapp: '',
+  siteBase: '',
+  versaoModelos: 2,
   modelos: [
+    MODELO_PREVIA,
     { id: 'apresentacao', nome: 'Apresentação (sites)', texto: MODELO_PADRAO },
     {
       id: 'sem-site',
@@ -50,13 +63,22 @@ const CONFIG_PADRAO = {
       texto: 'Oi! Passando para saber se você conseguiu ver minha mensagem anterior sobre a {nome}. Fico à disposição.',
     },
   ],
-  modeloAtivo: 'apresentacao',
+  modeloAtivo: 'previa',
   intervaloDisparoSeg: 40,
 };
 
 export const config = {
   obter() {
-    return { ...CONFIG_PADRAO, ...ler('config', {}) };
+    const salvo = ler('config', {});
+    const c = { ...CONFIG_PADRAO, ...salvo };
+    if (salvo.modelos && !(salvo.versaoModelos >= 2)) {
+      // Atualização: inclui o modelo com a prévia gratuita para quem já usava a versão anterior
+      if (!c.modelos.some((m) => m.id === 'previa')) c.modelos = [MODELO_PREVIA, ...c.modelos];
+      c.versaoModelos = 2;
+      c.modeloAtivo = 'previa';
+      gravar('config', c);
+    }
+    return c;
   },
   salvar(parcial) {
     const atual = this.obter();

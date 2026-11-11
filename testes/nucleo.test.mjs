@@ -74,3 +74,30 @@ test('enriquecimento: extrai e-mail, Instagram e WhatsApp do HTML', () => {
   assert.equal(c.instagram, 'https://www.instagram.com/empresa.oficial/');
   assert.equal(c.whatsapp, '5519987654321');
 });
+
+import { codificar, decodificar, dadosDaPrevia, linkDaPrevia, documentoCompleto, briefingDoSite, temaDoLead, linkLovable } from '../assets/js/modelo-site.js';
+
+test('prévia: link codifica e decodifica os dados com acentos', () => {
+  const lead = { nome: 'Clínica Sorriso & Cia', categoria: 'Dentista', nicho: 'Dentistas e clínicas odontológicas', telefone: '(19) 99876-5432', whatsapp: '5519998765432', cidade: 'Campinas', uf: 'SP', bairro: 'Cambuí', lat: -22.89, lon: -47.05 };
+  const link = linkDaPrevia(lead, 'https://exemplo.github.io/repo/app.html', { nome: 'Studio Web', whatsapp: '5519911112222' });
+  assert.match(link, /^https:\/\/exemplo\.github\.io\/repo\/previa\.html#d=[\w-]+$/);
+  const d = decodificar(link.split('#d=')[1]);
+  assert.equal(d.n, 'Clínica Sorriso & Cia');
+  assert.equal(d.ni, 'dentista');
+  assert.equal(d.an, 'Studio Web');
+  assert.deepEqual(decodificar(codificar({ a: 'ção' })), { a: 'ção' });
+});
+
+test('site pronto: HTML completo, seguro e com conteúdo do nicho', () => {
+  const d = dadosDaPrevia({ nome: 'Odonto <Vida>', categoria: 'Dentista', nicho: 'dentista', telefone: '(19) 3232-1010', cidade: 'Campinas', uf: 'SP', horario: 'Mo-Fr 08:00-18:00' });
+  const html = documentoCompleto(d);
+  assert.match(html, /^<!doctype html>/);
+  assert.ok(html.includes('Odonto &lt;Vida&gt;'));
+  assert.ok(!html.includes('<Vida>'));
+  assert.ok(html.includes('Seu sorriso merece o melhor cuidado'));
+  assert.ok(html.includes('Seg a Sex 08:00-18:00'));
+  assert.ok(!html.includes('Prévia gratuita'));
+  assert.equal(temaDoLead({ c: 'Academia' }).cta, 'Agendar aula experimental');
+  assert.match(briefingDoSite(d, { observacoes: 'destacar implantes' }), /destacar implantes/);
+  assert.match(linkLovable(d), /^https:\/\/lovable\.dev\/#prompt=/);
+});

@@ -23,13 +23,14 @@ export const COLUNAS = [
   ['notas', 'Anotações'],
   ['lat', 'Latitude'],
   ['lon', 'Longitude'],
+  ['linkPrevia', 'Link da prévia do site'],
   ['linkMaps', 'Link Google Maps'],
   ['linkOsm', 'Link OpenStreetMap'],
   ['fonte', 'Fonte'],
   ['coletadoEm', 'Coletado em'],
 ];
 
-const ETAPAS_ROTULO = { novo: 'Novo', contatado: 'Contatado', negociando: 'Em negociação', ganho: 'Fechado', perdido: 'Perdido' };
+const ETAPAS_ROTULO = { novo: 'Novo', contatado: 'Contatado', negociando: 'Em negociação', pago: 'Pagamento recebido', ganho: 'Site entregue', perdido: 'Perdido' };
 
 export function linhaExportacao(lead) {
   return {

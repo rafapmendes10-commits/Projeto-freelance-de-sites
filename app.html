@@ -47,6 +47,7 @@
     <symbol id="i-lua" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></symbol>
     <symbol id="i-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4v16l13-8Z"/></symbol>
     <symbol id="i-pular" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 4 10 8-10 8ZM19 5v14"/></symbol>
+    <symbol id="i-varinha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72ZM14 7l3 3M5 6v4M19 14v4M10 2v2M7 8H3M21 16h-4M11 3H9"/></symbol>
     <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></symbol>
   </svg>
 
@@ -283,6 +284,7 @@
             </div>
             <div class="barra-progresso"><span id="d-barra"></span></div>
             <p class="ajuda" id="d-status"></p>
+            <p class="aviso-marca" id="d-marca" hidden>Configure <a href="#config">sua marca</a> para que a prévia mostre seu nome e o botão <strong>Quero este site</strong>.</p>
             <div class="controle-disparo">
               <button class="btn btn-zap btn-g" type="button" id="d-proximo"><svg><use href="#i-zap"/></svg>Abrir próximo no WhatsApp</button>
               <button class="btn btn-g" type="button" id="d-pular"><svg><use href="#i-pular"/></svg>Pular</button>
@@ -320,6 +322,24 @@
           </div>
         </div>
         <div class="grade-config">
+          <div class="cartao painel">
+            <h3>Sua marca nas prévias</h3>
+            <p class="ajuda">Aparece na faixa da prévia gratuita, com o botão <strong>Quero este site</strong> que abre uma conversa no seu WhatsApp.</p>
+            <div class="campo">
+              <label for="c-agencia-nome">Seu nome ou nome da agência</label>
+              <input class="entrada" id="c-agencia-nome" placeholder="Ex.: Studio Web Campinas">
+            </div>
+            <div class="campo">
+              <label for="c-agencia-zap">Seu WhatsApp comercial</label>
+              <input class="entrada" id="c-agencia-zap" inputmode="tel" placeholder="Ex.: (19) 99999-0000">
+            </div>
+            <div class="campo">
+              <label for="c-site-base">Endereço público deste site (opcional)</label>
+              <input class="entrada" id="c-site-base" placeholder="Ex.: https://seu-usuario.github.io/Projeto-freelance-de-sites/">
+              <span class="ajuda">Deixe em branco para usar o endereço atual. Preencha se abrir o painel por outro endereço.</span>
+            </div>
+            <button class="btn btn-primario" type="button" id="c-salvar-marca">Salvar marca</button>
+          </div>
           <div class="cartao painel">
             <h3>Google Places (opcional)</h3>
             <p class="ajuda">Para trazer avaliações e mais telefones, use sua chave da Google Maps Platform com as APIs <em>Maps JavaScript</em> e <em>Places (New)</em> ativas. O Google oferece uma cota mensal gratuita; acima dela há cobrança. Restrinja a chave ao domínio do seu site.</p>

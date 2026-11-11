@@ -23,6 +23,17 @@ Tudo roda no navegador, sem servidor, sem banco de dados e sem mensalidade. A ho
 | Fonte opcional **Google Places** (avaliações e mais telefones) com chave própria | Configurações |
 | **Robô de extração** agendado no GitHub Actions, com enriquecimento de e-mail, Instagram e WhatsApp a partir dos sites | `scripts/` e `.github/workflows/` |
 
+## Fluxo de venda automatizado
+
+1. **Buscar:** o Radar encontra as empresas e já gera, para cada uma, uma **prévia gratuita do site** com nome, telefone, WhatsApp, endereço, mapa, horário e textos do segmento. A prévia é só um link (`previa.html#d=...`), sem servidor e sem custo.
+2. **Enviar:** o modelo de mensagem "Prévia gratuita do site" inclui `{link_previa}`. No disparo assistido, cada envio é um toque: o WhatsApp abre com a mensagem pronta.
+3. **Fechar:** na ficha do lead, clique em **Pagamento prévio realizado** e informe o valor.
+4. **Produzir:** o site pronto é baixado na hora (arquivo único com SEO local, mapa e WhatsApp). Também é possível abrir o **Lovable** com o briefing completo ou copiar o briefing para o Claude.
+
+Configure seu nome e WhatsApp em **Configurações, Sua marca nas prévias** para que a prévia mostre o botão **Quero este site**.
+
+Por que o envio não é 100% automático: a API oficial do WhatsApp é paga e exige consentimento prévio para mensagens de marketing, e robôs não oficiais violam os termos de uso e levam ao banimento do número. O envio assistido mantém o seu número seguro.
+
 ## De onde vêm os dados
 
 * **Padrão, gratuito:** [OpenStreetMap](https://www.openstreetmap.org), via APIs públicas Nominatim (localização) e Overpass (estabelecimentos). Licença ODbL, sem chave e sem custo. Os resultados citam a fonte.
@@ -46,7 +57,8 @@ O workflow **Extrair leads automaticamente** (`.github/workflows/extrair-leads.y
 * roda **toda segunda-feira** com as buscas listadas em `automacao/buscas.json`;
 * pode ser executado **manualmente** em Actions, Run workflow, informando nicho, cidade e raio;
 * visita o site de cada empresa para descobrir **e-mail, Instagram, Facebook e WhatsApp**;
-* salva CSV, JSON e um resumo em `dados/AAAA-MM-DD/` e também disponibiliza tudo para download na execução.
+* gera o **link da prévia gratuita** de cada empresa;
+* disponibiliza CSV, JSON e um resumo para download na própria execução (por 7 dias). Gravar no repositório é opcional e vem desligado, porque em repositório público os arquivos ficariam visíveis.
 
 Para editar as buscas agendadas, altere `automacao/buscas.json`:
 
