@@ -32,6 +32,15 @@ Tudo roda no navegador, sem servidor, sem banco de dados e sem mensalidade. A ho
 5. **Enviar:** o disparo assistido só envia o modelo com `{link_previa}` para quem já tem prévia pronta.
 6. **Fechar:** ao clicar em **Pagamento prévio realizado**, o prompt do **site final** (a partir da prévia aprovada e das suas anotações) é copiado para você colar na conversa com o Claude, ou abrir no Lovable.
 
+### Depois da venda: kit de entrega
+
+Ao clicar em **Pagamento prévio realizado**, a ficha do cliente vira um roteiro de entrega:
+
+1. **Mensagem de boas-vindas** no WhatsApp pedindo exatamente o que falta: domínio e CPF/CNPJ do titular, e-mail que será dono das contas, logo, fotos, serviços e redes.
+2. **Prompt do site final:** o Claude copia `modelos/site-base` para `sites/<slug>/`, porta o design da prévia aprovada e entrega um site completo (Eleventy) com SEO local, JSON-LD, Open Graph, sitemap, política de privacidade (LGPD), banner de cookies com Consent Mode v2, GA4, Tag Manager e Meta Pixel por configuração, formulário com antispam, páginas de obrigado e 404, cabeçalhos de segurança, painel de edição Pages CMS, manual do cliente e roteiro de publicação. Valida com `scripts/verificar-site.mjs` e gera as imagens com `scripts/gerar-imagens.mjs`.
+3. **Publicação no nome do cliente** seguindo `PUBLICACAO.md`: Registro.br, Cloudflare Pages e DNS, Web3Forms, Google Analytics, Search Console, Tag Manager, Meta Pixel e UptimeRobot.
+4. **Termo de entrega** (`entrega.html`): documento de aceite com partes, objeto, itens entregues, tabela de acessos e titularidade (sem senhas), suporte com prazo e escopo, responsabilidades e assinaturas, pronto para salvar em PDF.
+
 O robô semanal também gera, para cada busca, um arquivo `prompts-*.md` com as 10 melhores oportunidades, já com auditoria do site atual de cada comércio.
 
 Por que o envio não é 100% automático: a API oficial do WhatsApp é paga e exige consentimento prévio para mensagens de marketing, e robôs não oficiais violam os termos de uso e levam ao banimento do número. O envio assistido mantém o seu número seguro.
@@ -112,7 +121,12 @@ assets/vendor/             Leaflet (mapa) e SheetJS (Excel), sem depender de CDN
 scripts/extrair-leads.mjs  Robô de extração, enriquecimento e auditoria de sites
 scripts/verificar-previa.mjs Verificação de qualidade das prévias
 previas/                   Prévias personalizadas publicadas (uma pasta por comércio)
-CLAUDE.md                  Regras para o Claude criar as prévias
+entrega.html               Gerador do termo de entrega
+modelos/site-base/         Modelo técnico dos sites finais (Eleventy)
+sites/                     Sites finais dos clientes (não publicados no GitHub Pages)
+scripts/gerar-imagens.mjs  Imagem de compartilhamento, ícone e favicon do site final
+scripts/verificar-site.mjs Verificação de qualidade do site final antes da entrega
+CLAUDE.md                  Regras para o Claude criar prévias e sites finais
 automacao/buscas.json      Buscas agendadas
 .github/workflows/         Publicação no Pages e automação semanal
 testes/                    Testes automatizados (node --test)

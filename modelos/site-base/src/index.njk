@@ -1,0 +1,78 @@
+---
+layout: base.njk
+---
+{#- Página inicial. O design definitivo deve ser portado da prévia aprovada; a estrutura de dados vem de _data/site.json. #}
+<section class="heroi">
+  <div class="env heroi-grade">
+    <div>
+      <p class="etiqueta">{{ site.segmento }} em {{ site.endereco.bairro }}, {{ site.endereco.cidade }}</p>
+      <h1>{{ site.slogan }}</h1>
+      <p class="subtitulo">{{ site.subtitulo }}</p>
+      <div class="acoes">
+        <a class="btn btn-zap btn-g" href="https://wa.me/{{ site.whatsapp }}?text={{ site.mensagemWhatsapp | urlencode }}" target="_blank" rel="noopener">{{ site.chamada }}</a>
+        <a class="btn btn-claro btn-g" href="https://www.google.com/maps/dir/?api=1&destination={{ site.geo.lat }},{{ site.geo.lon }}" target="_blank" rel="noopener">Como chegar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="secao" id="servicos">
+  <div class="env">
+    <h2>Serviços</h2>
+    <div class="grade">
+      {%- for s in site.servicos %}
+      <article class="cartao"><h3>{{ s.titulo }}</h3><p>{{ s.texto }}</p></article>
+      {%- endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="secao alt" id="sobre">
+  <div class="env">
+    <h2>Por que escolher {{ site.nome }}</h2>
+    <div class="grade">
+      {%- for d in site.diferenciais %}
+      <article class="cartao"><h3>{{ d.titulo }}</h3><p>{{ d.texto }}</p></article>
+      {%- endfor %}
+    </div>
+  </div>
+</section>
+
+{%- if site.avaliacoes.length %}
+<section class="secao" id="avaliacoes">
+  <div class="env">
+    <h2>O que dizem os clientes</h2>
+    <div class="grade">
+      {%- for a in site.avaliacoes %}
+      <figure class="cartao"><blockquote>“{{ a.texto }}”</blockquote><figcaption>{{ a.autor }}, {{ a.fonte }}</figcaption></figure>
+      {%- endfor %}
+    </div>
+  </div>
+</section>
+{%- endif %}
+
+<section class="secao alt" id="duvidas">
+  <div class="env estreito">
+    <h2>Perguntas frequentes</h2>
+    {%- for f in site.faq %}
+    <details class="pergunta"><summary>{{ f.pergunta }}</summary><p>{{ f.resposta }}</p></details>
+    {%- endfor %}
+  </div>
+</section>
+
+<section class="secao" id="contato">
+  <div class="env contato-grade">
+    <div>
+      <h2>Fale com a gente</h2>
+      <ul class="lista-contato">
+        <li><strong>WhatsApp:</strong> <a href="https://wa.me/{{ site.whatsapp }}" target="_blank" rel="noopener">{{ site.telefone }}</a></li>
+        <li><strong>E-mail:</strong> <a href="mailto:{{ site.email }}">{{ site.email }}</a></li>
+        <li><strong>Endereço:</strong> {{ site.endereco.rua }}, {{ site.endereco.numero }}, {{ site.endereco.bairro }}, {{ site.endereco.cidade }}/{{ site.endereco.uf }}</li>
+        <li><strong>Horário:</strong> {% for h in site.horario %}{{ h.dias }}: {{ h.horas }}{% if not loop.last %}; {% endif %}{% endfor %}</li>
+      </ul>
+      {% include "formulario.njk" %}
+    </div>
+    <iframe class="mapa" title="Mapa com a localização de {{ site.nome }}" loading="lazy"
+      src="https://www.openstreetmap.org/export/embed.html?bbox={{ site.geo.lon - 0.006 }},{{ site.geo.lat - 0.004 }},{{ site.geo.lon + 0.006 }},{{ site.geo.lat + 0.004 }}&layer=mapnik&marker={{ site.geo.lat }},{{ site.geo.lon }}"></iframe>
+  </div>
+</section>

@@ -1,0 +1,12 @@
+{#- Formulário de contato. Com chave do Web3Forms envia por e-mail; sem chave, abre o WhatsApp com a mensagem. #}
+<form class="formulario" method="post" action="https://api.web3forms.com/submit" data-whatsapp="{{ site.whatsapp }}" {% if not site.integracoes.formulario.chave %}data-sem-chave{% endif %}>
+  <input type="hidden" name="access_key" value="{{ site.integracoes.formulario.chave }}">
+  <input type="hidden" name="subject" value="{{ site.integracoes.formulario.assunto }}">
+  <input type="hidden" name="redirect" value="{{ '/obrigado/' | urlAbsoluta(site.url) }}">
+  <input type="checkbox" name="botcheck" class="armadilha" tabindex="-1" autocomplete="off" aria-hidden="true">
+  <label>Nome<input name="nome" required autocomplete="name"></label>
+  <label>WhatsApp ou telefone<input name="telefone" required inputmode="tel" autocomplete="tel"></label>
+  <label>Mensagem<textarea name="mensagem" rows="4" required></textarea></label>
+  <label class="consentimento"><input type="checkbox" required> Concordo com o uso dos meus dados para retorno do contato, conforme a <a href="/privacidade/">política de privacidade</a>.</label>
+  <button class="btn btn-primario btn-g" type="submit">Enviar mensagem</button>
+</form>

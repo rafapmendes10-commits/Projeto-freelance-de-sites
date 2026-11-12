@@ -1,0 +1,29 @@
+---
+layout: base.njk
+titulo: Política de privacidade e cookies
+descricao: Como tratamos seus dados pessoais e utilizamos cookies, conforme a Lei Geral de Proteção de Dados (LGPD).
+permalink: /privacidade/
+---
+<section class="secao">
+  <div class="env estreito texto-longo">
+    <h1>Política de privacidade e cookies</h1>
+    <p><em>Última atualização: {{ "" | dataIso }}</em></p>
+    <p>Esta política explica como {{ site.empresa.razaoSocial or site.nome }}{% if site.empresa.documento %} ({{ site.empresa.documento }}){% endif %} trata os dados pessoais de quem visita este site, conforme a Lei nº 13.709/2018 (LGPD).</p>
+    <h2>1. Quais dados coletamos</h2>
+    <p>Coletamos apenas os dados que você nos envia voluntariamente pelo formulário de contato ou pelo WhatsApp (nome, telefone e mensagem) e, se você autorizar, dados de navegação anônimos por meio de cookies de medição.</p>
+    <h2>2. Para que usamos</h2>
+    <p>Para responder ao seu contato, agendar atendimentos e melhorar o site. Não vendemos nem compartilhamos seus dados para fins de marketing de terceiros.</p>
+    <h2>3. Base legal</h2>
+    <p>Execução de procedimentos preliminares a pedido do titular (art. 7º, V) para o atendimento, e consentimento (art. 7º, I) para cookies de medição.</p>
+    <h2>4. Cookies</h2>
+    <p>Usamos cookies essenciais, necessários ao funcionamento do site, e, somente com a sua permissão, cookies de medição como Google Analytics, Google Tag Manager e Meta Pixel. Você pode alterar sua escolha a qualquer momento em <button type="button" class="link" data-abrir-cookies>preferências de cookies</button>.</p>
+    <h2>5. Compartilhamento</h2>
+    <p>Os dados podem ser processados por fornecedores que viabilizam o site (hospedagem, envio do formulário e ferramentas de medição), sempre com finalidade restrita a esses serviços.</p>
+    <h2>6. Por quanto tempo guardamos</h2>
+    <p>Pelo tempo necessário para atender ao seu pedido ou cumprir obrigações legais.</p>
+    <h2>7. Seus direitos</h2>
+    <p>Você pode solicitar acesso, correção, anonimização, portabilidade ou exclusão dos seus dados, além de revogar o consentimento, pelo e-mail <a href="mailto:{{ site.empresa.emailPrivacidade or site.email }}">{{ site.empresa.emailPrivacidade or site.email }}</a>.</p>
+    <h2>8. Contato</h2>
+    <p>{{ site.nome }}, {{ site.endereco.rua }}, {{ site.endereco.numero }}, {{ site.endereco.bairro }}, {{ site.endereco.cidade }}/{{ site.endereco.uf }}. Telefone {{ site.telefone }}.</p>
+  </div>
+</section>

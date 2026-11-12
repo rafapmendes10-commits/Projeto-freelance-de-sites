@@ -1,0 +1,46 @@
+{
+  "url": "https://www.dominiodocliente.com.br/",
+  "nome": "Nome do Comércio",
+  "segmento": "Segmento",
+  "tipoSchema": "LocalBusiness",
+  "titulo": "Nome do Comércio | Segmento em Bairro, Cidade",
+  "descricao": "Descrição de 140 a 160 caracteres com o serviço principal, o bairro e a cidade, escrita para quem pesquisa no Google.",
+  "slogan": "Headline principal do site",
+  "subtitulo": "Frase de apoio que explica o benefício principal.",
+  "chamada": "Agendar pelo WhatsApp",
+  "telefone": "(00) 0000-0000",
+  "whatsapp": "5500000000000",
+  "mensagemWhatsapp": "Olá! Vim pelo site e gostaria de mais informações.",
+  "email": "contato@dominiodocliente.com.br",
+  "endereco": { "rua": "Rua Exemplo", "numero": "100", "bairro": "Bairro", "cidade": "Cidade", "uf": "UF", "cep": "00000-000" },
+  "geo": { "lat": -23.55, "lon": -46.63 },
+  "horario": [
+    { "dias": "Segunda a sexta", "horas": "08:00 às 18:00", "schema": "Mo-Fr 08:00-18:00" }
+  ],
+  "redes": { "instagram": "", "facebook": "", "googleMeuNegocio": "" },
+  "cores": { "primaria": "#0e7490", "secundaria": "#14b8a6", "texto": "#0f172a", "fundo": "#ffffff" },
+  "servicos": [
+    { "titulo": "Serviço 1", "texto": "Descrição curta e objetiva do serviço." }
+  ],
+  "diferenciais": [
+    { "titulo": "Diferencial 1", "texto": "Explicação do diferencial." }
+  ],
+  "faq": [
+    { "pergunta": "Pergunta frequente?", "resposta": "Resposta clara." }
+  ],
+  "avaliacoes": [],
+  "empresa": {
+    "razaoSocial": "",
+    "documento": "",
+    "responsavelTecnico": "",
+    "emailPrivacidade": "contato@dominiodocliente.com.br"
+  },
+  "integracoes": {
+    "ga4": "",
+    "gtm": "",
+    "metaPixel": "",
+    "searchConsole": "",
+    "formulario": { "servico": "web3forms", "chave": "", "assunto": "Novo contato pelo site" }
+  },
+  "agencia": { "nome": "", "url": "" }
+}

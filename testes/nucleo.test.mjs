@@ -75,7 +75,7 @@ test('enriquecimento: extrai e-mail, Instagram e WhatsApp do HTML', () => {
   assert.equal(c.whatsapp, '5519987654321');
 });
 
-import { enriquecerOportunidades, promptDaPrevia, promptEmLote, promptSiteFinal, caminhoPrevia, demandasDoNicho } from '../assets/js/oportunidade.js';
+import { enriquecerOportunidades, promptDaPrevia, promptEmLote, promptSiteFinal, mensagemOnboarding, caminhoPrevia, demandasDoNicho } from '../assets/js/oportunidade.js';
 import { auditarSite } from '../scripts/extrair-leads.mjs';
 import { caracteristicasDasEtiquetas } from '../assets/js/fontes/osm.js';
 
@@ -107,7 +107,14 @@ test('prompt individual traz dados, contexto, demandas, pesquisa e entrega', () 
     assert.ok(p.includes(trecho), `faltou: ${trecho}`);
   }
   assert.match(promptEmLote([a, a]), /Lote de 2 prévias/);
-  assert.match(promptSiteFinal({ ...a, notas: 'destacar implantes', valor: '1.500' }), /sites\/clinica-sorriso-pleno-cambui\/index\.html[\s\S]*destacar implantes/);
+  const final = promptSiteFinal({ ...a, notas: 'destacar implantes', valor: '1.500' });
+  for (const trecho of ['# Site final: Clínica Sorriso Pleno', 'modelos/site-base', 'sites/clinica-sorriso-pleno-cambui', 'node scripts/gerar-imagens.mjs', 'node scripts/verificar-site.mjs', 'destacar implantes', 'R$ 1.500', 'nunca invente']) {
+    assert.ok(final.includes(trecho), `site final sem: ${trecho}`);
+  }
+  assert.ok(!final.includes('\\`'), 'crases escapadas no texto');
+  const boas = mensagemOnboarding(a, { agenciaNome: 'Studio Web' });
+  assert.match(boas, /Aqui é Studio Web/);
+  assert.match(boas, /CPF\/CNPJ do titular/);
   assert.ok(demandasDoNicho({ categoria: 'Advocacia' }).cuidados.includes('OAB'));
 });
 

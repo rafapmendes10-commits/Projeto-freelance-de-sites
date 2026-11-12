@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {%- set tituloPagina = (titulo + " | " + site.nome) if titulo else site.titulo %}
+  {%- set descricaoPagina = descricao or site.descricao %}
+  {%- set urlPagina = page.url | urlAbsoluta(site.url) %}
+  <title>{{ tituloPagina }}</title>
+  <meta name="description" content="{{ descricaoPagina }}">
+  <link rel="canonical" href="{{ urlPagina }}">
+  {%- if semIndice %}<meta name="robots" content="noindex">{% endif %}
+  {%- if site.integracoes.searchConsole %}<meta name="google-site-verification" content="{{ site.integracoes.searchConsole }}">{% endif %}
+  <meta name="theme-color" content="{{ site.cores.primaria }}">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="pt_BR">
+  <meta property="og:site_name" content="{{ site.nome }}">
+  <meta property="og:title" content="{{ tituloPagina }}">
+  <meta property="og:description" content="{{ descricaoPagina }}">
+  <meta property="og:url" content="{{ urlPagina }}">
+  <meta property="og:image" content="{{ '/assets/img/og.png' | urlAbsoluta(site.url) }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/assets/img/icone-180.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>:root{--primaria:{{ site.cores.primaria }};--secundaria:{{ site.cores.secundaria }};--texto:{{ site.cores.texto }};--fundo:{{ site.cores.fundo }}}</style>
+  <link rel="stylesheet" href="/assets/css/site.css">
+  <script type="application/ld+json">{{ schema.jsonLd | json | safe }}</script>
+  <script id="configuracao" type="application/json">{{ schema.navegador | json | safe }}</script>
+  <script src="/assets/js/site.js" defer></script>
+</head>
+<body>
+  <a class="pular" href="#conteudo">Pular para o conteúdo</a>
+  <header class="topo">
+    <div class="env">
+      <a class="marca" href="/" aria-label="{{ site.nome }}, página inicial"><img src="/assets/img/favicon.svg" alt="" width="36" height="36">{{ site.nome }}</a>
+      <nav class="menu" aria-label="Menu principal">
+        <a href="/#servicos">Serviços</a><a href="/#sobre">Sobre</a><a href="/#duvidas">Dúvidas</a><a href="/#contato">Contato</a>
+      </nav>
+      <a class="btn btn-zap" href="https://wa.me/{{ site.whatsapp }}?text={{ site.mensagemWhatsapp | urlencode }}" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+  </header>
+  <main id="conteudo">
+    {{ content | safe }}
+  </main>
+  <footer class="rodape">
+    <div class="env rodape-grade">
+      <div>
+        <strong>{{ site.nome }}</strong>
+        <p>{{ site.endereco.rua }}, {{ site.endereco.numero }}, {{ site.endereco.bairro }}, {{ site.endereco.cidade }}/{{ site.endereco.uf }}, CEP {{ site.endereco.cep }}</p>
+        {%- if site.empresa.razaoSocial %}<p>{{ site.empresa.razaoSocial }}{% if site.empresa.documento %}, {{ site.empresa.documento }}{% endif %}</p>{% endif %}
+        {%- if site.empresa.responsavelTecnico %}<p>Responsável técnico: {{ site.empresa.responsavelTecnico }}</p>{% endif %}
+      </div>
+      <div>
+        <p><a href="tel:+55{{ site.telefone | soDigitos }}">{{ site.telefone }}</a><br><a href="mailto:{{ site.email }}">{{ site.email }}</a></p>
+        <p>{% if site.redes.instagram %}<a href="{{ site.redes.instagram }}" target="_blank" rel="noopener">Instagram</a> {% endif %}{% if site.redes.facebook %}<a href="{{ site.redes.facebook }}" target="_blank" rel="noopener">Facebook</a> {% endif %}{% if site.redes.googleMeuNegocio %}<a href="{{ site.redes.googleMeuNegocio }}" target="_blank" rel="noopener">Google</a>{% endif %}</p>
+      </div>
+      <div>
+        <p><a href="/privacidade/">Política de privacidade e cookies</a><br><button type="button" class="link" data-abrir-cookies>Preferências de cookies</button></p>
+        <p class="pequeno">© {{ "" | anoAtual }} {{ site.nome }}.{% if site.agencia.nome %} Site por {% if site.agencia.url %}<a href="{{ site.agencia.url }}" target="_blank" rel="noopener">{{ site.agencia.nome }}</a>{% else %}{{ site.agencia.nome }}{% endif %}.{% endif %}</p>
+      </div>
+    </div>
+  </footer>
+  <a class="zap-flutuante" href="https://wa.me/{{ site.whatsapp }}?text={{ site.mensagemWhatsapp | urlencode }}" target="_blank" rel="noopener" aria-label="Conversar pelo WhatsApp">
+    <svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38a9.9 9.9 0 0 0 4.74 1.21c5.46 0 9.91-4.45 9.91-9.91A9.9 9.9 0 0 0 12.04 2Zm5.8 14.13c-.24.68-1.42 1.3-1.96 1.35-.5.05-.98.23-3.3-.69-2.8-1.1-4.56-3.97-4.7-4.15-.14-.18-1.12-1.49-1.12-2.85s.71-2.02.97-2.3c.25-.27.55-.34.73-.34l.53.01c.17 0 .4-.06.62.48.24.56.8 1.94.86 2.08.07.14.12.3.02.48-.09.18-.14.3-.27.46-.14.16-.29.36-.41.48-.14.14-.28.29-.12.56.16.27.71 1.17 1.52 1.9 1.05.93 1.93 1.22 2.2 1.36.28.14.44.11.6-.07.16-.18.69-.8.88-1.08.18-.27.37-.23.62-.14.25.09 1.6.76 1.88.9.27.13.45.2.52.31.06.12.06.66-.17 1.3Z"/></svg>
+  </a>
+  <div class="cookies" id="cookies" role="dialog" aria-live="polite" aria-label="Aviso de cookies" hidden>
+    <p>Usamos cookies essenciais para o site funcionar e, com a sua permissão, cookies de medição para entender as visitas e melhorar o atendimento. <a href="/privacidade/">Saiba mais</a>.</p>
+    <div class="cookies-acoes">
+      <button type="button" class="btn btn-claro" data-cookies="recusar">Somente essenciais</button>
+      <button type="button" class="btn btn-primario" data-cookies="aceitar">Aceitar todos</button>
+    </div>
+  </div>
+</body>
+</html>

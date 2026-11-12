@@ -1,0 +1,57 @@
+# Painel de edição do site (Pages CMS: https://pagescms.org, gratuito).
+# O cliente entra com a conta do GitHub, edita os textos e salva; a Cloudflare publica sozinha.
+media:
+  input: src/assets/img
+  output: /assets/img
+content:
+  - name: site
+    label: Conteúdo do site
+    type: file
+    path: src/_data/site.json
+    format: json
+    fields:
+      - { name: nome, label: Nome do negócio, type: string }
+      - { name: slogan, label: Frase principal, type: string }
+      - { name: subtitulo, label: Frase de apoio, type: text }
+      - { name: chamada, label: Texto do botão principal, type: string }
+      - { name: descricao, label: Descrição para o Google (até 160 caracteres), type: text }
+      - { name: telefone, label: Telefone, type: string }
+      - { name: whatsapp, label: WhatsApp (55 + DDD + número, só dígitos), type: string }
+      - { name: email, label: E-mail, type: string }
+      - name: horario
+        label: Horário de funcionamento
+        type: object
+        list: true
+        fields:
+          - { name: dias, label: Dias, type: string }
+          - { name: horas, label: Horas, type: string }
+          - { name: schema, label: Código para o Google (ex. Mo-Fr 08:00-18:00), type: string }
+      - name: servicos
+        label: Serviços
+        type: object
+        list: true
+        fields:
+          - { name: titulo, label: Título, type: string }
+          - { name: texto, label: Descrição, type: text }
+      - name: diferenciais
+        label: Diferenciais
+        type: object
+        list: true
+        fields:
+          - { name: titulo, label: Título, type: string }
+          - { name: texto, label: Descrição, type: text }
+      - name: faq
+        label: Perguntas frequentes
+        type: object
+        list: true
+        fields:
+          - { name: pergunta, label: Pergunta, type: string }
+          - { name: resposta, label: Resposta, type: text }
+      - name: avaliacoes
+        label: Avaliações reais (com autorização)
+        type: object
+        list: true
+        fields:
+          - { name: texto, label: Texto, type: text }
+          - { name: autor, label: Autor, type: string }
+          - { name: fonte, label: Fonte (ex. Google), type: string }

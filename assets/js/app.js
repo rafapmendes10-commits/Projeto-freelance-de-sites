@@ -4,7 +4,7 @@ import { NICHOS, encontrarNicho } from './nichos.js';
 import { buscarLeadsOsm, deduplicar } from './fontes/osm.js';
 import { buscarLeadsGoogleNavegador } from './fontes/google.js';
 import { baixarCsv, baixarExcel, baixarJson, COLUNAS } from './exportar.js';
-import { enriquecerOportunidades, promptDaPrevia, promptEmLote, promptSiteFinal, caminhoPrevia, slugPrevia } from './oportunidade.js';
+import { enriquecerOportunidades, promptDaPrevia, promptEmLote, promptSiteFinal, mensagemOnboarding, caminhoPrevia, slugPrevia } from './oportunidade.js';
 import { crm, config, historico, fila, sessao, ETAPAS, backupCompleto, restaurarBackup, apagarTudo } from './armazenamento.js';
 import {
   escaparHtml as h, slug, preencherModelo, linkWhatsApp, formatarData, interpretarTelefones,
@@ -679,10 +679,12 @@ function abrirDetalhe(leadBase) {
     if (m === 'pago') {
       const valor = $('#m-valor')?.value.trim() || '';
       const atualizado = crm.atualizar(l.id, { etapa: 'pago', pagoEm: new Date().toISOString(), valor, notas: notasAtuais() });
-      copiarTexto(promptSiteFinal(atualizado, configPrompt()), 'Pagamento registrado. O prompt do site final foi copiado: cole na conversa com o Claude.');
+      enviarOnboarding(atualizado);
       renderizarCrmSeVisivel();
       abrirDetalhe(atualizado);
     }
+    if (m === 'onboarding') enviarOnboarding({ ...l, notas: notasAtuais() });
+    if (m === 'termo') { crm.atualizar(l.id, { notas: notasAtuais() }); window.open(`entrega.html#${encodeURIComponent(l.id)}`, '_blank'); }
     if (m === 'prompt-final') copiarTexto(promptSiteFinal({ ...l, notas: notasAtuais() }, configPrompt()), 'Prompt do site final copiado. Cole na conversa com o Claude.');
     if (m === 'entregue') {
       const atualizado = crm.atualizar(l.id, { etapa: 'ganho', entregueEm: new Date().toISOString(), notas: notasAtuais() });
@@ -748,16 +750,32 @@ function blocoVenda(salvo) {
       </div>
     </div>`;
   }
+  const etapaFeita = (cond) => (cond ? '<span class="selo selo-marca">feito</span>' : '');
   return `<div class="bloco-venda pago">
-    <div class="linha entre"><strong>${salvo.etapa === 'ganho' ? 'Site entregue' : 'Pagamento recebido: produzir o site final'}</strong>
+    <div class="linha entre"><strong>${salvo.etapa === 'ganho' ? 'Site entregue' : 'Kit de entrega do site'}</strong>
       <span class="selo selo-roxo">Pago em ${formatarData(salvo.pagoEm)}${salvo.valor ? ` · R$ ${h(salvo.valor)}` : ''}</span></div>
-    <div class="acoes">
-      <button class="btn btn-primario" type="button" data-m="prompt-final">${ico('copiar')}Copiar prompt do site final</button>
-      <a class="btn" href="https://lovable.dev/#prompt=${encodeURIComponent(promptSiteFinal(salvo, configPrompt()).slice(0, 45000))}" target="_blank" rel="noopener">${ico('varinha')}Abrir no Lovable</a>
-      ${salvo.etapa === 'pago' ? `<button class="btn" type="button" data-m="entregue">${ico('check')}Marcar como entregue</button>` : ''}
-    </div>
-    <p class="ajuda">O prompt parte da prévia aprovada e inclui suas anotações. Cole na conversa com o Claude para gerar o site definitivo, ou use o Lovable (a construção começa quando você clicar em enviar).</p>
+    <ol class="passos-entrega">
+      <li><div><strong>Pedir os dados ao cliente</strong> ${etapaFeita(salvo.onboardingEm)}<p class="ajuda">Domínio no nome dele, e-mail das contas, logo, fotos, serviços e redes. Registre as respostas nas anotações.</p></div>
+        <button class="btn" type="button" data-m="onboarding">${ico('zap')}Mensagem de boas-vindas</button></li>
+      <li><div><strong>Gerar o site final</strong><p class="ajuda">Cole o prompt na conversa com o Claude: ele monta o site completo a partir da prévia (SEO, LGPD, cookies, formulário, Analytics, painel de edição e manual) e valida tudo.</p></div>
+        <button class="btn btn-primario" type="button" data-m="prompt-final">${ico('copiar')}Copiar prompt do site final</button></li>
+      <li><div><strong>Publicar no nome do cliente</strong><p class="ajuda">Siga o PUBLICACAO.md do site: Registro.br, Cloudflare, Web3Forms, Google Analytics, Search Console e monitoramento, sempre na conta do cliente.</p></div></li>
+      <li><div><strong>Termo de entrega</strong> ${etapaFeita(salvo.entrega)}<p class="ajuda">Lista os acessos e a titularidade (sem senhas) e define o suporte. Salve em PDF e colha a assinatura.</p></div>
+        <button class="btn" type="button" data-m="termo">${ico('externo')}Termo de entrega</button></li>
+    </ol>
+    ${salvo.etapa === 'pago' ? `<div class="linha"><button class="btn" type="button" data-m="entregue">${ico('check')}Marcar como entregue</button></div>` : ''}
   </div>`;
+}
+
+function enviarOnboarding(lead) {
+  const texto = mensagemOnboarding(lead, configPrompt());
+  crm.atualizar(lead.id, { onboardingEm: new Date().toISOString() });
+  if (lead.whatsapp) {
+    abrirExterno(linkWhatsApp(lead.whatsapp, texto));
+    aviso('Mensagem de boas-vindas aberta no WhatsApp com a lista do que o cliente precisa enviar.');
+  } else {
+    copiarTexto(texto, 'Mensagem de boas-vindas copiada. Envie ao cliente.');
+  }
 }
 
 async function gerarPromptsEmLote(leads) {

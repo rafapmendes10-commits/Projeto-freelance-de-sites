@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Termo de entrega | Radar Leads</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <style>
+    body { background: var(--fundo); }
+    .pagina { display: grid; grid-template-columns: 420px minmax(0, 1fr); gap: 24px; max-width: 1400px; margin: 0 auto; padding: 24px; }
+    .formulario { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; padding: 20px; }
+    .formulario h1 { font-size: 20px; margin: 0; }
+    .formulario fieldset { border: 1px solid var(--borda); border-radius: var(--raio-p); padding: 12px; display: grid; gap: 10px; margin: 0; }
+    .formulario legend { font-weight: 700; font-size: 13px; padding: 0 6px; color: var(--texto-2); }
+    .caixa { display: flex; gap: 8px; align-items: center; font-size: 14px; }
+    .barra { display: flex; gap: 8px; flex-wrap: wrap; }
+    .documento { background: #fff; color: #111827; border-radius: 12px; box-shadow: var(--sombra-2); padding: 56px 64px; font-size: 14px; line-height: 1.6; }
+    .documento h2 { font-size: 22px; margin: 0 0 4px; color: #111827; }
+    .documento h3 { font-size: 15px; margin: 22px 0 6px; color: #111827; text-transform: uppercase; letter-spacing: .04em; }
+    .documento table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .documento th, .documento td { border: 1px solid #d1d5db; padding: 6px 8px; text-align: left; vertical-align: top; }
+    .documento th { background: #f3f4f6; }
+    .documento ul { margin: 6px 0; padding-left: 20px; }
+    .documento .sub { color: #4b5563; margin: 0; }
+    .assinaturas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 56px; }
+    .assinaturas div { border-top: 1px solid #111827; padding-top: 6px; font-size: 13px; }
+    .vazio { color: #9ca3af; }
+    .aceite, .documento table tr { break-inside: avoid; page-break-inside: avoid; }
+    @media (max-width: 1000px) { .pagina { grid-template-columns: 1fr; } .formulario { position: static; max-height: none; } .documento { padding: 28px 20px; } }
+    @media print {
+      body { background: #fff; }
+      .formulario { display: none; }
+      .pagina { display: block; padding: 0; }
+      .documento { box-shadow: none; padding: 0; border-radius: 0; }
+      @page { margin: 18mm; }
+    }
+  </style>
+</head>
+<body>
+  <div class="pagina">
+    <form class="cartao formulario" id="form" autocomplete="off">
+      <h1>Termo de entrega</h1>
+      <p class="ajuda" id="status">Carregando cliente...</p>
+      <div class="barra">
+        <button class="btn btn-primario" type="button" id="imprimir">Salvar em PDF / imprimir</button>
+        <a class="btn" href="app.html#leads">Voltar ao CRM</a>
+      </div>
+      <fieldset><legend>Projeto</legend>
+        <div class="campo"><label for="urlSite">Endereço do site</label><input class="entrada" id="urlSite" placeholder="https://www.cliente.com.br"></div>
+        <div class="campo"><label for="dataEntrega">Data da entrega</label><input class="entrada" id="dataEntrega" type="date"></div>
+        <div class="campo"><label for="valor">Valor total (R$)</label><input class="entrada" id="valor"></div>
+        <div class="campo"><label for="cidadeAssinatura">Cidade da assinatura</label><input class="entrada" id="cidadeAssinatura"></div>
+      </fieldset>
+      <fieldset><legend>Contratante</legend>
+        <div class="campo"><label for="clienteNome">Nome ou razão social</label><input class="entrada" id="clienteNome"></div>
+        <div class="campo"><label for="clienteDocumento">CPF ou CNPJ</label><input class="entrada" id="clienteDocumento"></div>
+        <div class="campo"><label for="clienteResponsavel">Responsável que assina</label><input class="entrada" id="clienteResponsavel"></div>
+        <div class="campo"><label for="clienteEmail">E-mail titular das contas</label><input class="entrada" id="clienteEmail"></div>
+      </fieldset>
+      <fieldset><legend>Contratado (você)</legend>
+        <div class="campo"><label for="agenciaNome">Nome ou empresa</label><input class="entrada" id="agenciaNome"></div>
+        <div class="campo"><label for="agenciaDocumento">CPF ou CNPJ</label><input class="entrada" id="agenciaDocumento"></div>
+      </fieldset>
+      <fieldset><legend>Domínio e hospedagem</legend>
+        <div class="campo"><label for="dominio">Domínio</label><input class="entrada" id="dominio" placeholder="cliente.com.br"></div>
+        <div class="campo"><label for="registrador">Registrador</label><input class="entrada" id="registrador" value="Registro.br"></div>
+        <label class="caixa"><input type="checkbox" id="eppEntregue"> Domínio transferido com código EPP/Auth Code</label>
+        <div class="campo"><label for="hospedagem">Hospedagem e DNS</label><input class="entrada" id="hospedagem" value="Cloudflare Pages e DNS Cloudflare"></div>
+        <div class="campo"><label for="emailProfissional">E-mail profissional</label><input class="entrada" id="emailProfissional" placeholder="contato@cliente.com.br (Cloudflare Email Routing)"></div>
+      </fieldset>
+      <fieldset><legend>Código, painel e integrações</legend>
+        <div class="campo"><label for="repositorio">Repositório do código</label><input class="entrada" id="repositorio" placeholder="https://github.com/cliente/site"></div>
+        <div class="campo"><label for="cms">Painel de edição</label><input class="entrada" id="cms" value="Pages CMS (app.pagescms.org), login com o GitHub do cliente"></div>
+        <div class="campo"><label for="formulario">Formulário</label><input class="entrada" id="formulario" placeholder="Web3Forms, mensagens para contato@..."></div>
+        <div class="campo"><label for="pagamentos">Pagamentos ou outras APIs</label><input class="entrada" id="pagamentos" placeholder="Não se aplica"></div>
+      </fieldset>
+      <fieldset><legend>Métricas</legend>
+        <div class="campo"><label for="ga4">Google Analytics 4 (ID)</label><input class="entrada" id="ga4" placeholder="G-XXXXXXX"></div>
+        <label class="caixa"><input type="checkbox" id="searchConsole"> Search Console verificado e sitemap enviado</label>
+        <div class="campo"><label for="gtm">Google Tag Manager (ID)</label><input class="entrada" id="gtm" placeholder="GTM-XXXXXX"></div>
+        <div class="campo"><label for="pixel">Meta Pixel (ID)</label><input class="entrada" id="pixel"></div>
+        <label class="caixa"><input type="checkbox" id="monitoramento"> Monitoramento de disponibilidade (UptimeRobot)</label>
+      </fieldset>
+      <fieldset><legend>Entrega e suporte</legend>
+        <label class="caixa"><input type="checkbox" id="backupEntregue" checked> Backup .zip do código entregue</label>
+        <label class="caixa"><input type="checkbox" id="manualEntregue" checked> Manual do site entregue</label>
+        <div class="campo"><label for="suporteDias">Suporte (dias corridos)</label><input class="entrada" id="suporteDias" type="number" min="0" value="30"></div>
+        <div class="campo"><label for="suporteInclui">O suporte inclui</label><textarea class="entrada" id="suporteInclui">Correção de erros do site entregue; pequenos ajustes de texto, horários e contatos; orientação sobre o uso do painel de edição.</textarea></div>
+        <div class="campo"><label for="suporteNaoInclui">Não inclui</label><textarea class="entrada" id="suporteNaoInclui">Novas páginas ou funcionalidades; produção de fotos e textos; gestão de anúncios; custos de domínio e serviços de terceiros.</textarea></div>
+        <div class="campo"><label for="observacoes">Observações</label><textarea class="entrada" id="observacoes"></textarea></div>
+      </fieldset>
+    </form>
+    <article class="documento" id="documento"></article>
+  </div>
+  <script type="module" src="assets/js/entrega.js"></script>
+</body>
+</html>

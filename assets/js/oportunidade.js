@@ -287,36 +287,89 @@ export function promptEmLote(leads, config = {}) {
   return cabecalho + leads.map((l, i) => `\n---\n\n<!-- ${i + 1} de ${leads.length} -->\n${promptDaPrevia(l, config)}`).join('');
 }
 
+/** Mensagem para o cliente logo após o pagamento, pedindo tudo o que o site final precisa. */
+export function mensagemOnboarding(lead, config = {}) {
+  const primeiro = config.agenciaNome ? `Aqui é ${config.agenciaNome}. ` : '';
+  return [
+    `Olá! ${primeiro}Obrigado pela confiança: vamos colocar o site da ${lead.nome} no ar. Para começar, preciso de algumas informações:`,
+    '',
+    '*1. Domínio (endereço do site)*',
+    '• Duas opções de nome, por exemplo nomedaempresa.com.br',
+    '• Nome completo ou razão social e CPF/CNPJ do titular (o domínio fica no seu nome, no Registro.br)',
+    '• Se já tiver um domínio: onde ele está registrado',
+    '',
+    '*2. Contas (ficam no seu nome)*',
+    '• O e-mail que será dono das contas do site (Google, Cloudflare e GitHub)',
+    '• O e-mail que vai receber as mensagens do formulário',
+    '',
+    '*3. Identidade e conteúdo*',
+    '• Logotipo (de preferência em PNG ou PDF)',
+    '• Fotos reais: fachada, ambiente, equipe e trabalhos (pode mandar por aqui mesmo)',
+    '• Lista de serviços que quer destacar e o que mais te diferencia',
+    '• Nome e registro profissional do responsável técnico, se a sua área exigir',
+    '• Convênios, formas de pagamento e área de atendimento',
+    '',
+    '*4. Presença online*',
+    '• Link do Instagram, Facebook e do perfil no Google (Google Meu Negócio)',
+    '',
+    'Pode mandar aos poucos. Assim que eu tiver o domínio e as fotos, já começo. 😊',
+  ].join('\n');
+}
+
 /** Prompt para transformar a prévia aprovada no site definitivo, depois do pagamento. */
 export function promptSiteFinal(lead, config = {}) {
   const slugAtual = slugPrevia(lead);
+  const pasta = `sites/${slugAtual}`;
   const previa = lead.linkPrevia || `${(config.baseSite || '').replace(/\/?$/, '/')}${caminhoPrevia(lead)}`;
-  return [
+  const d = demandasDoNicho(lead);
+  const linhas = [
     `# Site final: ${lead.nome}`,
     '',
-    `O cliente aprovou a prévia e pagou o sinal${lead.valor ? ` (valor combinado: R$ ${lead.valor})` : ''}. Crie o site definitivo a partir da prévia aprovada.`,
+    `O cliente aprovou a prévia e pagou${lead.valor ? ` (valor combinado: R$ ${lead.valor})` : ''}. Construa o site definitivo, completo e pronto para publicar, a partir da prévia aprovada. Siga a seção "Sites finais" do CLAUDE.md.`,
     '',
     '## Ponto de partida',
     `- Prévia aprovada: ${previa}`,
-    `- Arquivo da prévia no repositório: previas/${slugAtual}/index.html (se existir)`,
+    `- Arquivo da prévia: previas/${slugAtual}/index.html (se existir no repositório). O design, a paleta e os textos aprovados são a referência visual obrigatória.`,
+    `- Modelo-base técnico: modelos/site-base (já traz SEO, LGPD, cookies, formulário, medição, CMS e documentação).`,
     '',
-    '## Entrega',
-    `- Crie \`sites/${slugAtual}/index.html\` (e arquivos de apoio na mesma pasta, se necessário).`,
-    '- Remova a faixa de prévia e o botão "Quero este site"; remova o noindex e deixe o site indexável.',
-    '- Inclua dados estruturados LocalBusiness (JSON-LD), Open Graph, favicon, página 404 simples e política de privacidade se houver formulário.',
-    '- Mantenha todos os fatos confirmados; troque textos de exemplo pelas informações das anotações abaixo e deixe marcado o que ainda depende do cliente (fotos, preços, nomes).',
-    '- Rode uma revisão visual em 390 px e 1440 px, faça commit com a mensagem `Site final: ' + lead.nome + '` e push.',
-    '- A pasta sites/ não é publicada no GitHub Pages: no fim, me passe o passo a passo para publicar na Cloudflare Pages com o domínio do cliente.',
+    '## Passo a passo',
+    `1. Copie modelos/site-base para ${pasta}.`,
+    `2. Preencha ${pasta}/src/_data/site.json com os dados abaixo e com o que o cliente enviou (anotações). Deixe vazio o que ainda não existe (chaves, IDs, razão social): nunca invente.`,
+    `3. Porte o design da prévia para ${pasta}/src/index.njk e ${pasta}/src/assets/css/site.css, mantendo a estrutura de dados do site.json, o formulário, o banner de cookies e os eventos de conversão. Remova a faixa de prévia.`,
+    '4. Inclua as seções exigidas pelo nicho (abaixo), perguntas frequentes reais do segmento e textos com os termos de busca local.',
+    `5. Gere as imagens: \`node scripts/gerar-imagens.mjs ${pasta}\`.`,
+    `6. Compile: \`cd ${pasta} && npm install && npm run build\`.`,
+    `7. Verifique: \`node scripts/verificar-site.mjs ${pasta}\`. Zero falhas; avisos só podem restar para dados que dependem do cliente.`,
+    '8. Revise com o Playwright em 390 px e 1440 px: sem rolagem horizontal, contraste AA, foco visível, botões tocáveis, banner de cookies funcionando.',
+    `9. Remova node_modules e _site, faça commit com a mensagem \`Site final: ${lead.nome}\` e push.`,
     '',
     '## Dados do comércio',
+    `- Nome: ${lead.nome}`,
+    `- Segmento: ${lead.categoria}${d.nicho ? ` (${d.nicho.rotulo})` : ''}`,
     `- Endereço: ${lead.endereco || [lead.bairro, lead.cidade, lead.uf].filter(Boolean).join(', ')}`,
+    lead.cep ? `- CEP: ${lead.cep}` : '',
     `- Telefone: ${lead.telefone || 'não informado'}`,
-    lead.whatsapp ? `- WhatsApp: +${lead.whatsapp}` : '- WhatsApp: não informado',
+    lead.whatsapp ? `- WhatsApp: ${lead.whatsapp}` : '- WhatsApp: não informado (confirmar com o cliente)',
     lead.email ? `- E-mail: ${lead.email}` : '',
     lead.instagram ? `- Instagram: ${lead.instagram}` : '',
-    lead.horario ? `- Horário: ${lead.horario}` : '',
+    lead.facebook ? `- Facebook: ${lead.facebook}` : '',
+    lead.horario ? `- Horário (formato OpenStreetMap, também serve para o schema): ${lead.horario}` : '',
+    lead.lat != null ? `- Coordenadas: ${lead.lat}, ${lead.lon}` : '',
+    ...(lead.caracteristicas?.length ? [`- Características: ${lead.caracteristicas.join('; ')}`] : []),
     '',
-    '## Anotações da negociação',
-    lead.notas ? lead.notas : '(sem anotações; pergunte o que precisar antes de finalizar)',
-  ].filter((l) => l !== '').join('\n').replace(/\n(##)/g, '\n\n$1') + '\n';
+    '## Exigências do nicho',
+    ...d.essenciais.map((e) => `- ${e}`),
+    `- Cuidados: ${d.cuidados}`,
+    `- Termos de busca local para título, descrição e textos: ${d.buscas.join(', ')}`,
+    '',
+    '## Anotações da negociação e material do cliente',
+    lead.notas ? lead.notas : '(sem anotações: liste no fim o que falta pedir ao cliente)',
+    '',
+    '## Entregáveis da sua resposta',
+    `- Caminho do projeto (${pasta}) e resultado da verificação.`,
+    '- Lista do que ainda depende do cliente (domínio, chave do formulário, IDs de medição, fotos, razão social).',
+    `- Roteiro de publicação personalizado a partir de ${pasta}/PUBLICACAO.md, já com o nome do domínio, se informado.`,
+    '- Dados para o termo de entrega: lista de serviços configurados e onde cada um fica.',
+  ];
+  return linhas.filter((l) => l !== '').join('\n').replace(/\n(##)/g, '\n\n$1') + '\n';
 }

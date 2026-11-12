@@ -32,3 +32,24 @@ Quando o usuário colar um prompt "Prévia personalizada: <comércio>" gerado pe
 
 ### Padrão de qualidade
 A prévia deve parecer feita por um estúdio caro: hierarquia tipográfica forte, espaçamento generoso, uma ideia visual marcante ligada ao negócio (por exemplo, a cor da fachada, a especialidade, o bairro) e textos escritos para aquele público. Se parecer um modelo genérico, refaça.
+
+## Sites finais
+
+Quando o usuário colar um prompt "Site final: <comércio>" (gerado após a venda), construa o site definitivo seguindo estas regras.
+
+### Base obrigatória
+- Copie `modelos/site-base` para `sites/<slug>/`. Ele já traz SEO local, JSON-LD, Open Graph, sitemap, robots, manifest, política de privacidade (LGPD), banner de cookies com Consent Mode v2, GA4/GTM/Meta Pixel por configuração, formulário com antispam e alternativa pelo WhatsApp, páginas de obrigado e 404, cabeçalhos de segurança, painel Pages CMS e documentação (`PUBLICACAO.md`, `MANUAL-DO-CLIENTE.md`).
+- Todo o conteúdo editável fica em `src/_data/site.json`. Não espalhe textos fixos pelos templates se eles devem ser editáveis pelo cliente.
+- Não remova nem enfraqueça: consentimento de cookies, link da política de privacidade, eventos de conversão, cabeçalhos de segurança, acessibilidade.
+
+### Design
+- A prévia aprovada (`previas/<slug>/index.html`) é a referência visual. Porte o conceito, a paleta e a tipografia, eleve o acabamento e retire a faixa de prévia.
+- Fotos reais enviadas pelo cliente vão para `src/assets/img/` em WebP ou JPG otimizado (até 200 KB cada), com `alt` descritivo, `width`, `height` e `loading="lazy"` abaixo da dobra.
+
+### Honestidade e dados do cliente
+- As mesmas regras de honestidade das prévias. Campos sem informação (chave do formulário, IDs de medição, razão social, domínio) ficam vazios e entram na lista de pendências, nunca com valores inventados.
+- Nenhuma senha, chave privada ou token secreto no repositório. A chave do Web3Forms e os IDs de medição são públicos por natureza e podem ir no `site.json`.
+
+### Validação
+- `node scripts/gerar-imagens.mjs sites/<slug>`, depois `npm install && npm run build` dentro da pasta e `node scripts/verificar-site.mjs sites/<slug>` com zero falhas.
+- Revisão visual com o Playwright em 390 px e 1440 px. Remova `node_modules` e `_site` antes do commit.
